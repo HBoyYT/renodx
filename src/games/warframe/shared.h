@@ -119,11 +119,12 @@ cbuffer shader_injection : register(b13) {
 // #define RENODX_SWAP_CHAIN_CLAMP_COLOR_SPACE    0
 
 /////#define RENODX_TONE_MAP_WORKING_COLOR_SPACE    color::convert::COLOR_SPACE_BT2020
-#define RENODX_TONE_MAP_CLAMP_COLOR_SPACE      color::convert::COLOR_SPACE_BT2020
-#define RENODX_TONE_MAP_CLAMP_PEAK             color::convert::COLOR_SPACE_BT2020
+//#define RENODX_TONE_MAP_CLAMP_COLOR_SPACE      color::convert::COLOR_SPACE_BT2020
+//#define RENODX_TONE_MAP_CLAMP_PEAK             color::convert::COLOR_SPACE_BT2020
 //#define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
 
 
+#define RENODX_SWAP_CHAIN_CLAMP_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
 
 
 #define RENODX_GAMMA_CORRECTION              shader_injection.gamma_correction

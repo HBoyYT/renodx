@@ -409,12 +409,12 @@
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-        .label = "ShortFuse's Ko-Fi",
+        .label = "HBoy's Patreon",
         .section = "Links",
         .group = "button-line-2",
-        .tint = 0xFF5A16,
+        .tint = 0xf96854,
         .on_change = []() {
-          renodx::utils::platform::Launch("https://ko-fi.com/shortfuse");
+          renodx::utils::platform::Launch("https://www.patreon.com/c/HBoyYT");
         },
     },
     new renodx::utils::settings::Setting{

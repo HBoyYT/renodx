@@ -54,7 +54,7 @@ float3 CrossFadeFix(float3 untonemapped, float3 tonemapped, float fadeCbuffer) {
     }
   }
 
-  if (cb0_009z < 0) {  // If fis negative (fade to white)
+  if (cb0_009z < 0) {  // If is negative (fade to white)
     // Scale tonemapped to peak brightness
     float scale = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
     float3 tonemappedScaled = saturate(tonemapped) * scale;
