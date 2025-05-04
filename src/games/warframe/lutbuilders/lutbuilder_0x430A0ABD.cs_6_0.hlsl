@@ -1,0 +1,255 @@
+#include "../shared.h"
+#include "../common.hlsl"
+
+
+
+RWTexture3D<float4> u0 : register(u0);
+
+cbuffer cb0 : register(b0) {
+  float cb0_001x : packoffset(c001.x);
+  float cb0_001y : packoffset(c001.y);
+  float cb0_001z : packoffset(c001.z);
+  float cb0_001w : packoffset(c001.w);
+  float cb0_002x : packoffset(c002.x);
+  float cb0_002y : packoffset(c002.y);
+  float cb0_002z : packoffset(c002.z);
+  float cb0_002w : packoffset(c002.w);
+  float cb0_003x : packoffset(c003.x);
+  float cb0_003y : packoffset(c003.y);
+  float cb0_003z : packoffset(c003.z);
+  float cb0_003w : packoffset(c003.w);
+  float cb0_004x : packoffset(c004.x);
+  float cb0_004y : packoffset(c004.y);
+  float cb0_004z : packoffset(c004.z);
+  float cb0_004w : packoffset(c004.w);
+  float cb0_005x : packoffset(c005.x);
+  float cb0_005y : packoffset(c005.y);
+  float cb0_005z : packoffset(c005.z);
+  float cb0_005w : packoffset(c005.w);
+  float cb0_006x : packoffset(c006.x);
+  float cb0_008x : packoffset(c008.x);
+  float cb0_008y : packoffset(c008.y);
+  float cb0_008z : packoffset(c008.z);
+  float cb0_008w : packoffset(c008.w);
+  float cb0_009x : packoffset(c009.x);
+  float cb0_009y : packoffset(c009.y);
+  float cb0_009z : packoffset(c009.z);
+  float cb0_010x : packoffset(c010.x);
+  float cb0_010y : packoffset(c010.y);
+  float cb0_010z : packoffset(c010.z);
+  float cb0_011x : packoffset(c011.x);
+  float cb0_011y : packoffset(c011.y);
+  float cb0_011z : packoffset(c011.z);
+  float cb0_011w : packoffset(c011.w);
+  float cb0_013x : packoffset(c013.x);
+  float cb0_013y : packoffset(c013.y);
+  float cb0_014x : packoffset(c014.x);
+  float cb0_014y : packoffset(c014.y);
+  float cb0_014z : packoffset(c014.z);
+  float cb0_014w : packoffset(c014.w);
+  float cb0_015x : packoffset(c015.x);
+  float cb0_015y : packoffset(c015.y);
+  float cb0_015z : packoffset(c015.z);
+  float cb0_015w : packoffset(c015.w);
+  float cb0_016x : packoffset(c016.x);
+  float cb0_016y : packoffset(c016.y);
+  float cb0_016z : packoffset(c016.z);
+  float cb0_016w : packoffset(c016.w);
+  float cb0_017x : packoffset(c017.x);
+  float cb0_017y : packoffset(c017.y);
+  float cb0_017z : packoffset(c017.z);
+  float cb0_017w : packoffset(c017.w);
+  float cb0_018x : packoffset(c018.x);
+  float cb0_018y : packoffset(c018.y);
+  float cb0_018z : packoffset(c018.z);
+  float cb0_018w : packoffset(c018.w);
+  float cb0_019x : packoffset(c019.x);
+  float cb0_019y : packoffset(c019.y);
+  float cb0_019z : packoffset(c019.z);
+  float cb0_019w : packoffset(c019.w);
+  float cb0_020x : packoffset(c020.x);
+  float cb0_020y : packoffset(c020.y);
+  float cb0_020z : packoffset(c020.z);
+  float cb0_020w : packoffset(c020.w);
+  float cb0_021x : packoffset(c021.x);
+  float cb0_021y : packoffset(c021.y);
+  float cb0_021z : packoffset(c021.z);
+  float cb0_021w : packoffset(c021.w);
+  float cb0_022x : packoffset(c022.x);
+  float cb0_022y : packoffset(c022.y);
+  float cb0_022z : packoffset(c022.z);
+  float cb0_022w : packoffset(c022.w);
+  float cb0_023x : packoffset(c023.x);
+  float cb0_023y : packoffset(c023.y);
+  float cb0_023z : packoffset(c023.z);
+  float cb0_023w : packoffset(c023.w);
+  float cb0_024x : packoffset(c024.x);
+  float cb0_024y : packoffset(c024.y);
+  float cb0_024z : packoffset(c024.z);
+  float cb0_024w : packoffset(c024.w);
+  float cb0_025x : packoffset(c025.x);
+  float cb0_025y : packoffset(c025.y);
+  float cb0_025z : packoffset(c025.z);
+  float cb0_025w : packoffset(c025.w);
+  float cb0_026x : packoffset(c026.x);
+  float cb0_026y : packoffset(c026.y);
+  float cb0_026z : packoffset(c026.z);
+  float cb0_026w : packoffset(c026.w);
+  float cb0_027x : packoffset(c027.x);
+  float cb0_027y : packoffset(c027.y);
+  float cb0_027z : packoffset(c027.z);
+  float cb0_027w : packoffset(c027.w);
+  float cb0_028x : packoffset(c028.x);
+  float cb0_028y : packoffset(c028.y);
+  float cb0_028z : packoffset(c028.z);
+  float cb0_028w : packoffset(c028.w);
+  float cb0_029x : packoffset(c029.x);
+  float cb0_029y : packoffset(c029.y);
+  float cb0_029z : packoffset(c029.z);
+  float cb0_029w : packoffset(c029.w);
+  float cb0_030x : packoffset(c030.x);
+  float cb0_030y : packoffset(c030.y);
+  float cb0_030z : packoffset(c030.z);
+  float cb0_030w : packoffset(c030.w);
+  float cb0_031x : packoffset(c031.x);
+  float cb0_031y : packoffset(c031.y);
+  float cb0_031z : packoffset(c031.z);
+  float cb0_031w : packoffset(c031.w);
+  float cb0_032x : packoffset(c032.x);
+  float cb0_032y : packoffset(c032.y);
+  float cb0_032z : packoffset(c032.z);
+  float cb0_032w : packoffset(c032.w);
+  float cb0_033x : packoffset(c033.x);
+  float cb0_033y : packoffset(c033.y);
+  float cb0_033z : packoffset(c033.z);
+  float cb0_033w : packoffset(c033.w);
+  float cb0_034x : packoffset(c034.x);
+  float cb0_034y : packoffset(c034.y);
+  float cb0_034z : packoffset(c034.z);
+  float cb0_034w : packoffset(c034.w);
+};
+
+[numthreads(8, 8, 1)] void main(uint3 SV_DispatchThreadID: SV_DispatchThreadID) {
+  float _6[3];
+  float _7[3];
+  float _8[3];
+  float _9[3];
+  float _10[3];
+  float _11[3];
+  float _25 = ((exp2((((float((uint)(SV_DispatchThreadID.x))) * 0.4516128897666931f) + -6.07624626159668f))) * 0.36000001430511475f) + -0.005335438530892134f;
+  float _27 = ((exp2((((float((uint)(SV_DispatchThreadID.y))) * 0.4516128897666931f) + -6.07624626159668f))) * 0.36000001430511475f) + -0.005335438530892134f;
+  float _29 = ((exp2((((float((uint)(SV_DispatchThreadID.z))) * 0.4516128897666931f) + -6.07624626159668f))) * 0.36000001430511475f) + -0.005335438530892134f;
+  float _30 = dot(float3(_25, _27, _29), float3(0.2125999927520752f, 0.7152000069618225f, 0.0722000002861023f));
+  float _44 = (cb0_018w) + (cb0_023w);
+  float _58 = (cb0_017w) * (cb0_022w);
+  float _72 = (cb0_016w) * (cb0_021w);
+  float _86 = (cb0_015w) * (cb0_020w);
+  float _97 = (cb0_014w) * (cb0_019w);
+  float _101 = (cb0_014x) * (_25 - _30);
+  float _104 = (cb0_014y) * (_27 - _30);
+  float _107 = (cb0_014z) * (_29 - _30);
+  float _167 = saturate(((_30 - (cb0_034x)) / ((cb0_034y) - (cb0_034x))));
+  float _171 = (_167 * _167) * (3.0f - (_167 * 2.0f));
+  float _172 = 1.0f - _171;
+  float _181 = (cb0_033w) + (cb0_018w);
+  float _190 = (cb0_032w) * (cb0_017w);
+  float _199 = (cb0_031w) * (cb0_016w);
+  float _208 = (cb0_030w) * (cb0_015w);
+  float _214 = (cb0_029w) * (cb0_014w);
+  float _277 = saturate(((_30 - (cb0_034z)) / ((cb0_034w) - (cb0_034z))));
+  float _281 = (_277 * _277) * (3.0f - (_277 * 2.0f));
+  float _290 = (cb0_028w) + (cb0_018w);
+  float _299 = (cb0_027w) * (cb0_017w);
+  float _308 = (cb0_026w) * (cb0_016w);
+  float _317 = (cb0_025w) * (cb0_015w);
+  float _323 = (cb0_024w) * (cb0_014w);
+  float _381 = _171 - _281;
+  float _421 = (cb0_010x) * ((exp2(((log2((max(6.103519990574569e-05f, (((_281 * ((((cb0_033x) + (cb0_018x)) + _181) + ((((cb0_032x) * (cb0_017x)) * _190) * (exp2(((log2(((exp2(((((cb0_030x) * (cb0_015x)) * _208) * (log2(((max(0.0f, (((_101 * (cb0_029x)) * _214) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_031x) * (cb0_016x)) * _199)))))))) + (_172 * ((((cb0_018x) + (cb0_023x)) + _44) + ((((cb0_017x) * (cb0_022x)) * _58) * (exp2(((log2(((exp2(((((cb0_015x) * (cb0_020x)) * _86) * (log2(((max(0.0f, (((_101 * (cb0_019x)) * _97) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_016x) * (cb0_021x)) * _72))))))))) + (((((cb0_028x) + (cb0_018x)) + _290) + ((((cb0_027x) * (cb0_017x)) * _299) * (exp2(((log2(((exp2(((((cb0_025x) * (cb0_015x)) * _317) * (log2(((max(0.0f, (((_101 * (cb0_024x)) * _323) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_026x) * (cb0_016x)) * _308))))))) * _381)))))) * (cb0_011x)))) + (cb0_011w));
+  float _422 = (cb0_010y) * ((exp2(((log2((max(6.103519990574569e-05f, (((_281 * ((((cb0_033y) + (cb0_018y)) + _181) + ((((cb0_032y) * (cb0_017y)) * _190) * (exp2(((log2(((exp2(((((cb0_030y) * (cb0_015y)) * _208) * (log2(((max(0.0f, (((_104 * (cb0_029y)) * _214) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_031y) * (cb0_016y)) * _199)))))))) + (_172 * ((((cb0_018y) + (cb0_023y)) + _44) + ((((cb0_017y) * (cb0_022y)) * _58) * (exp2(((log2(((exp2(((((cb0_015y) * (cb0_020y)) * _86) * (log2(((max(0.0f, (((_104 * (cb0_019y)) * _97) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_016y) * (cb0_021y)) * _72))))))))) + (((((cb0_028y) + (cb0_018y)) + _290) + ((((cb0_027y) * (cb0_017y)) * _299) * (exp2(((log2(((exp2(((((cb0_025y) * (cb0_015y)) * _317) * (log2(((max(0.0f, (((_104 * (cb0_024y)) * _323) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_026y) * (cb0_016y)) * _308))))))) * _381)))))) * (cb0_011y)))) + (cb0_011w));
+  float _423 = (cb0_010z) * ((exp2(((log2((max(6.103519990574569e-05f, (((_281 * ((((cb0_033z) + (cb0_018z)) + _181) + ((((cb0_032z) * (cb0_017z)) * _190) * (exp2(((log2(((exp2(((((cb0_030z) * (cb0_015z)) * _208) * (log2(((max(0.0f, (((_107 * (cb0_029z)) * _214) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_031z) * (cb0_016z)) * _199)))))))) + (_172 * ((((cb0_018z) + (cb0_023z)) + _44) + ((((cb0_017z) * (cb0_022z)) * _58) * (exp2(((log2(((exp2(((((cb0_015z) * (cb0_020z)) * _86) * (log2(((max(0.0f, (((_107 * (cb0_019z)) * _97) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_016z) * (cb0_021z)) * _72))))))))) + (((((cb0_028z) + (cb0_018z)) + _290) + ((((cb0_027z) * (cb0_017z)) * _299) * (exp2(((log2(((exp2(((((cb0_025z) * (cb0_015z)) * _317) * (log2(((max(0.0f, (((_107 * (cb0_024z)) * _323) + _30))) * 5.55555534362793f)))))) * 0.18000000715255737f))) * (1.0f / (((cb0_026z) * (cb0_016z)) * _308))))))) * _381)))))) * (cb0_011z)))) + (cb0_011w));
+  float _424 = dot(float3(_421, _422, _423), float3(0.2125999927520752f, 0.7152000069618225f, 0.0722000002861023f));
+  _6[0] = (cb0_001x);
+  _7[0] = (cb0_001y);
+  _8[0] = (cb0_001z);
+  _9[0] = (cb0_001w);
+  _10[0] = (cb0_002x);
+  _11[0] = (cb0_002y);
+  _6[1] = (cb0_002z);
+  _7[1] = (cb0_002w);
+  _8[1] = (cb0_003x);
+  _9[1] = (cb0_003y);
+  _10[1] = (cb0_003z);
+  _11[1] = (cb0_003w);
+  _6[2] = (cb0_004x);
+  _7[2] = (cb0_004y);
+  _8[2] = (cb0_004z);
+  _9[2] = (cb0_004w);
+  _10[2] = (cb0_005x);
+  _11[2] = (cb0_005y);
+  float _487 = (cb0_005z) * (((((cb0_008x) * _424) - _421) * (cb0_008w)) + _421);
+  int _491 = (((bool)((_487 < (cb0_005w)))) ? 0 : ((((bool)((_487 < (cb0_006x)))) ? 1 : 2)));
+  float _497 = (_487 - (_6[_491])) * (_8[_491]);
+  float _511 = 0.0f;
+  float _542;
+  float _573;
+  if (((_497 > 0.0f))) {
+    _511 = (exp2((((((_11[_491]) * 0.6931471824645996f) * (log2(_497))) + (_10[_491])) * 1.4426950216293335f)));
+  }
+  float _517 = ((_9[_491]) * _511) + (_7[_491]);
+  float _518 = (cb0_005z) * (((((cb0_008y) * _424) - _422) * (cb0_008w)) + _422);
+  int _522 = (((bool)((_518 < (cb0_005w)))) ? 0 : ((((bool)((_518 < (cb0_006x)))) ? 1 : 2)));
+  float _528 = (_518 - (_6[_522])) * (_8[_522]);
+  _542 = 0.0f;
+  if (((_528 > 0.0f))) {
+    _542 = (exp2((((((_11[_522]) * 0.6931471824645996f) * (log2(_528))) + (_10[_522])) * 1.4426950216293335f)));
+  }
+  float _548 = ((_9[_522]) * _542) + (_7[_522]);
+  float _549 = (cb0_005z) * (((((cb0_008z) * _424) - _423) * (cb0_008w)) + _423);
+  int _553 = (((bool)((_549 < (cb0_005w)))) ? 0 : ((((bool)((_549 < (cb0_006x)))) ? 1 : 2)));
+  float _559 = (_549 - (_6[_553])) * (_8[_553]);
+  _573 = 0.0f;
+  if (((_559 > 0.0f))) {
+    _573 = (exp2((((((_11[_553]) * 0.6931471824645996f) * (log2(_559))) + (_10[_553])) * 1.4426950216293335f)));
+  }
+  float _579 = ((_9[_553]) * _573) + (_7[_553]);
+  float _623 = 0.5f - (cb0_009z);
+  float _627 = ((_623 + (((exp2(((log2(((((bool)((_517 <= 0.0031308000907301903f))) ? (_517 * 12.920000076293945f) : (((exp2(((log2(_517)) * 0.4166666567325592f))) * 1.0549999475479126f) + -0.054999999701976776f))))) * (cb0_009x)))) + -0.5f) * (cb0_009y))));
+  float _628 = ((_623 + (((exp2(((log2(((((bool)((_548 <= 0.0031308000907301903f))) ? (_548 * 12.920000076293945f) : (((exp2(((log2(_548)) * 0.4166666567325592f))) * 1.0549999475479126f) + -0.054999999701976776f))))) * (cb0_009x)))) + -0.5f) * (cb0_009y))));
+  float _629 = ((_623 + (((exp2(((log2(((((bool)((_579 <= 0.0031308000907301903f))) ? (_579 * 12.920000076293945f) : (((exp2(((log2(_579)) * 0.4166666567325592f))) * 1.0549999475479126f) + -0.054999999701976776f))))) * (cb0_009x)))) + -0.5f) * (cb0_009y))));
+  int _633 = int(633);
+  float _635 = (((bool)((_633 == 1))) ? 1.0f : 0.0f);
+  float _637 = (((bool)((_633 == 2))) ? 1.0f : 0.0f);
+  float _639 = (((bool)((_633 == 3))) ? 1.0f : 0.0f);
+  float _641 = (((bool)((_633 == 0))) ? 0.0f : 0.8999999761581421f);
+  float _648 = (_641 * 0.1120000034570694f) + 1.0f;
+  float _654 = (((((bool)((_641 > 0.0f))) ? 0.10999999940395355f : 0.0f)) - (_641 * 0.07500000298023224f)) + 0.5f;
+  float _655 = _654 + (_648 * (_627 + -0.5f));
+  float _656 = _654 + (_648 * (_628 + -0.5f));
+  float _657 = _654 + (_648 * (_629 + -0.5f));
+  float _662 = ((_655 * 17.882400512695312f) + (_656 * 43.5161018371582f)) + (_657 * 4.119349956512451f);
+  float _667 = ((_655 * 3.4556500911712646f) + (_656 * 27.155399322509766f)) + (_657 * 3.867140054702759f);
+  float _672 = ((_655 * 0.029956599697470665f) + (_656 * 0.1843090057373047f)) + (_657 * 1.4670900106430054f);
+  float _679 = (((_667 * 2.023439884185791f) - (_672 * 2.52810001373291f)) * _635) + (_662 * (1.0f - _635));
+  float _686 = (((_662 * 0.4942069947719574f) + (_672 * 1.248270034790039f)) * _637) + (_667 * (1.0f - _637));
+  float _693 = (((_667 * 0.8011090159416199f) - (_662 * 0.3959130048751831f)) * _639) + (_672 * (1.0f - _639));
+  float _706 = ((((_686 * 0.13050441443920135f) + _655) - (_679 * 0.08094444870948792f)) - (_693 * 0.11672106385231018f)) * 0.699999988079071f;
+  float _726 = 1.0f - _641;
+
+  float3 untonemapped = float3(_421, _422, _423);
+
+  // Applying cb0_009x (which controls fading to white / black) to untonemapped
+  untonemapped.r = ((_623 + (((exp2(((log2(((((bool)((untonemapped.r <= 0.0031308000907301903f))) ? (untonemapped.r * 12.920000076293945f) : (((exp2(((log2(untonemapped.r)) * 0.4166666567325592f))) * 1.0549999475479126f) + -0.054999999701976776f))))) * (cb0_009x)))) + -0.5f) * (cb0_009y))));
+  untonemapped.g = ((_623 + (((exp2(((log2(((((bool)((untonemapped.g <= 0.0031308000907301903f))) ? (untonemapped.g * 12.920000076293945f) : (((exp2(((log2(untonemapped.g)) * 0.4166666567325592f))) * 1.0549999475479126f) + -0.054999999701976776f))))) * (cb0_009x)))) + -0.5f) * (cb0_009y))));
+  untonemapped.b = ((_623 + (((exp2(((log2(((((bool)((untonemapped.b <= 0.0031308000907301903f))) ? (untonemapped.b * 12.920000076293945f) : (((exp2(((log2(untonemapped.b)) * 0.4166666567325592f))) * 1.0549999475479126f) + -0.054999999701976776f))))) * (cb0_009x)))) + -0.5f) * (cb0_009y))));
+  untonemapped = renodx::color::srgb::DecodeSafe(untonemapped);
+
+  untonemapped = renodx::color::correct::GammaSafe(untonemapped, false, 2.4);
+
+  float3 tonemapped = renodx::color::srgb::DecodeSafe(float3(((((((min((max(_655, 0.0f)), 1.0f)) * _641) - _627) + (_655 * _726)) * (cb0_013y)) + _627),
+                                                             ((((((min((max((((((_656 * 2.0f) - (_686 * 0.05401932820677757f)) + (_679 * 0.010248533450067043f)) + (_693 * 0.11361470818519592f)) + _706), 0.0f)), 1.0f)) * _641) - _628) + (_656 * _726)) * (cb0_013y)) + _628),
+                                                             ((((((min((max((((((_679 * 0.0003652969317045063f) + (_657 * 2.0f)) + (_686 * 0.004121614620089531f)) - (_693 * 0.693511426448822f)) + _706), 0.0f)), 1.0f)) * _641) - _629) + (_657 * _726)) * (cb0_013y)) + _629)));
+
+  untonemapped = CrossFadeFix(untonemapped, tonemapped, cb0_009z);
+  float4 output = LutBuilderTonemap(untonemapped, tonemapped);
+  u0[int3(((uint)(SV_DispatchThreadID.x)), ((uint)(SV_DispatchThreadID.y)), ((uint)(SV_DispatchThreadID.z)))] = output;
+}
