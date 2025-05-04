@@ -353,6 +353,40 @@
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "HDR Look",
+        .section = "Options",
+        .group = "button-line-1",
+        .on_change = []() {
+          renodx::utils::settings::UpdateSetting("ColorGradeExposure", 1.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeHighlights", 55.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeShadows", 50.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeContrast", 55.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeSaturation", 55.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeHighlightSaturation", 65.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeBlowoutRestoration", 65.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeBlowout", 60.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeFlare", 30.f);
+        },
+    },
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "SDR Look",
+        .section = "Options",
+        .group = "button-line-1",
+        .on_change = []() {
+          renodx::utils::settings::UpdateSetting("ColorGradeExposure", 1.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeHighlights", 50.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeShadows", 50.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeContrast", 50.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeSaturation", 50.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeHighlightSaturation", 50.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeBlowoutRestoration", 0.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeBlowout", 0.f);
+          renodx::utils::settings::UpdateSetting("ColorGradeFlare", 0.f);
+        },
+    },
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
         .label = "HDR Den Discord",
         .section = "Links",
         .group = "button-line-2",
