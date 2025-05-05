@@ -85,7 +85,7 @@
          .key = "GammaCorrection",
          .binding = &shader_injection.gamma_correction,
          .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-         .default_value = 0.f,
+         .default_value = 1.f,
          .label = "Gamma Correction",
          .section = "Tone Mapping",
          .tooltip = "Emulates a display EOTF.",
