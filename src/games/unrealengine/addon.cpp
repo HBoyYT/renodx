@@ -434,17 +434,16 @@ void AddGamePatches() {
   auto filename = process_path.filename().string();
   auto product_name = renodx::utils::platform::GetProductName(process_path);
 
-  // Clair Obscur Expedition 33
   if (product_name == "Expedition 33") {
     AddExpedition33Upgrades();
-    reshade::log::message(reshade::log::level::info, std::format("Applied patches for {} ({}).", filename, product_name).c_str());
-  }
-
-  // Avowed
-  if (product_name == "Avowed") {
+  } else if (product_name == "Avowed") {
     AddAvowedUpgrades();
-    reshade::log::message(reshade::log::level::info, std::format("Applied patches for {} ({}).", filename, product_name).c_str());
+  } else if (product_name == "InfinityNikki") {
+    renodx::mods::swapchain::ignored_window_class_names.emplace("bridge");  // Dummy window created by PerfSight.dll
+  } else {
+    return;
   }
+  reshade::log::message(reshade::log::level::info, std::format("Applied patches for {} ({}).", filename, product_name).c_str());
 }
 
 const auto UPGRADE_TYPE_NONE = 0.f;
@@ -496,6 +495,12 @@ const std::unordered_map<
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
+        {
+            "InfinityNikki",
+            {
+                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+            },
+        },
 };
 
 float g_dump_shaders = 0;
@@ -509,7 +514,7 @@ bool OnDrawForLUTDump(
     uint32_t instance_count,
     uint32_t first_vertex,
     uint32_t first_instance) {
-  if (g_dump_shaders == 0) return false; 
+  if (g_dump_shaders == 0) return false;
 
   auto* shader_state = renodx::utils::shader::GetCurrentState(cmd_list);
 
@@ -737,7 +742,6 @@ void AddAdvancedSettings() {
         .is_global = true,
         .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
-
     add_setting(force_borderless_setting);
 
     if (force_borderless_setting->GetValue() == 0) {
@@ -749,7 +753,7 @@ void AddAdvancedSettings() {
     auto* setting = new renodx::utils::settings::Setting{
         .key = "PreventFullscreen",
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
+        .default_value = 1.f,
         .label = "Prevent Fullscreen",
         .section = "Resource Upgrades",
         .tooltip = "Prevent exclusive fullscreen for proper HDR",
@@ -761,9 +765,9 @@ void AddAdvancedSettings() {
         .is_global = true,
         .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
+    add_setting(setting);
 
     renodx::mods::swapchain::prevent_full_screen = (setting->GetValue() == 1.f);
-    add_setting(setting);
   }
 
   {
