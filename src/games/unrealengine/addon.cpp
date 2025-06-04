@@ -420,16 +420,44 @@ void AddExpedition33Upgrades() {
   });
 }
 
+void AddAvowedUpgrades() {
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::r10g10b10a2_unorm,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+      .aspect_ratio = 4360.f / 2160.f,
+  });
+}
+
+void AddStellarBladeUpgrades() {
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::r10g10b10a2_unorm,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+  });
+
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::b8g8r8a8_typeless,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+  });
+}
+
 void AddGamePatches() {
   auto process_path = renodx::utils::platform::GetCurrentProcessPath();
   auto filename = process_path.filename().string();
   auto product_name = renodx::utils::platform::GetProductName(process_path);
 
-  // Clair Obscur Expedition 33
   if (product_name == "Expedition 33") {
     AddExpedition33Upgrades();
-    reshade::log::message(reshade::log::level::info, std::format("Applied patches for {} ({}).", filename, product_name).c_str());
+  } else if (product_name == "Avowed") {
+    AddAvowedUpgrades();
+  } else if (product_name == "Stellar Blade (Demo)") {
+    AddStellarBladeUpgrades();
+  } else {
+    return;
   }
+  reshade::log::message(reshade::log::level::info, std::format("Applied patches for {} ({}).", filename, product_name).c_str());
 }
 
 const auto UPGRADE_TYPE_NONE = 0.f;
@@ -472,6 +500,18 @@ const std::unordered_map<
             {
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_B8G8R8A8_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+            },
+        },
+        {
+            "Avowed",
+            {
+                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+            },
+        },
+        {
+            "InfinityNikki",
+            {
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
@@ -716,7 +756,6 @@ void AddAdvancedSettings() {
         .is_global = true,
         .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
-
     add_setting(force_borderless_setting);
 
     if (force_borderless_setting->GetValue() == 0) {
@@ -728,7 +767,7 @@ void AddAdvancedSettings() {
     auto* setting = new renodx::utils::settings::Setting{
         .key = "PreventFullscreen",
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
+        .default_value = 1.f,
         .label = "Prevent Fullscreen",
         .section = "Resource Upgrades",
         .tooltip = "Prevent exclusive fullscreen for proper HDR",
@@ -740,9 +779,9 @@ void AddAdvancedSettings() {
         .is_global = true,
         .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
+    add_setting(setting);
 
     renodx::mods::swapchain::prevent_full_screen = (setting->GetValue() == 1.f);
-    add_setting(setting);
   }
 
   {
@@ -789,32 +828,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
 
       renodx::mods::shader::on_create_pipeline_layout = [](auto, auto params) {
-        if (params.size() >= 20) return false;
-
-        auto process_path = renodx::utils::platform::GetCurrentProcessPath();
-
-        auto filename = process_path.filename().string();
-
-        if (filename == "RoboCop-Win64-Shipping.exe") return true;  // RoboCop: Rogue City
-
-        auto product_name = renodx::utils::platform::GetProductName(process_path);
-
-        if (product_name == "Jusant") return true;
-        if (product_name == "InfinityNikki") return true;
-        if (product_name == "Lords of the Fallen") return true;  // Lords of the Fallen 2023
-        if (product_name == "NobodyWantsToDie") return true;
-        if (product_name == "Ready Or Not") return true;
-        if (product_name == "Eternal Strands") return true;
-        if (product_name == "Expedition 33") return true;
-        if (product_name == "YKS") return true;  // Slitterhead
-        if (product_name == "Split Fiction") return true;
-        if (product_name == "RSDragonwilds") return true;
-        if (product_name == "Enotria: The Last Song") return true;
-
-        // UE DX12 has a 4 param root sig that crashes if modified. Track for now
-        return std::ranges::any_of(params, [](auto param) {
-          return (param.type == reshade::api::pipeline_layout_param_type::descriptor_table);
-        });
+        return (params.size() < 20);
       };
 
       if (!initialized) {
