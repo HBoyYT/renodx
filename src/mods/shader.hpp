@@ -85,6 +85,7 @@ static bool push_injections_on_present = false;
 static float* resource_tag_float = nullptr;
 static int32_t expected_constant_buffer_index = -1;
 static uint32_t expected_constant_buffer_space = 0;
+static uint32_t constant_buffer_offset = 0;
 
 static std::shared_mutex unmodified_shaders_mutex;
 static std::unordered_set<uint32_t> unmodified_shaders;
@@ -152,6 +153,7 @@ static bool OnCreatePipelineLayout(
   }
 
   auto* data = renodx::utils::data::Get<DeviceData>(device);
+  if (data == nullptr) return false;
 
   for (uint32_t param_index = 0; param_index < param_count; ++param_index) {
     auto param = params[param_index];
@@ -296,6 +298,7 @@ static void OnInitPipelineLayout(
   int32_t injection_index = -1;
   auto device_api = device->get_api();
   auto* data = renodx::utils::data::Get<DeviceData>(device);
+  if (data == nullptr) return;
 
   uint32_t cbv_index = 0;
   uint32_t pc_count = 0;
@@ -349,8 +352,26 @@ static void OnInitPipelineLayout(
   }
 
   reshade::api::pipeline_layout injection_layout = layout;
+  if (device_api == reshade::api::device_api::d3d9) {
+    reshade::api::pipeline_layout_param new_params;
+    new_params.type = reshade::api::pipeline_layout_param_type::push_constants;
+    new_params.push_constants.count = shader_injection_size;
+    new_params.push_constants.dx_register_index = 0;
+    new_params.push_constants.dx_register_space = 0;
+    new_params.push_constants.visibility = reshade::api::shader_stage::all;
 
-  if (device_api == reshade::api::device_api::d3d12 || device_api == reshade::api::device_api::vulkan) {
+    auto result = device->create_pipeline_layout(1, &new_params, &injection_layout);
+    std::stringstream s;
+    s << "mods::shader::OnInitPipelineLayout(";
+    s << "Creating D3D9 Injection Layout ";
+    s << PRINT_PTR(injection_layout.handle);
+    s << ": " << result;
+    s << " )";
+    reshade::log::message(reshade::log::level::info, s.str().c_str());
+
+    injection_index = 0;
+
+  } else if (device_api == reshade::api::device_api::d3d12 || device_api == reshade::api::device_api::vulkan) {
     if (data->use_pipeline_layout_cloning) {
       const uint32_t old_count = param_count;
       uint32_t new_count = old_count;
@@ -502,7 +523,7 @@ static void OnInitPipelineLayout(
     s << PRINT_PTR(injection_layout.handle);
     s << ": " << result;
     s << " )";
-    reshade::log::message(reshade::log::level::warning, s.str().c_str());
+    reshade::log::message(reshade::log::level::info, s.str().c_str());
 
     injection_index = 0;
   }
@@ -666,8 +687,8 @@ inline bool PushShaderInjections(
 
 #ifdef DEBUG_LEVEL_1
   std::stringstream s;
-  s << "mods::shader::HandlePreDraw(pushing constants: ";
-  s << ", layout: " << PRINT_PTR(injection_layout.handle) << "[" << injection_index << "]";
+  s << "mods::shader::PushShaderInjections(";
+  s << "layout: " << PRINT_PTR(injection_layout.handle) << "[" << injection_index << "]";
   s << ", dispatch: " << (is_dispatch ? "true" : "false");
   s << ", resource_tag: " << resource_tag;
   s << ")";
@@ -679,12 +700,21 @@ inline bool PushShaderInjections(
     *resource_tag_float = resource_tag;
   }
 
+  reshade::api::shader_stage shader_stage;
+  if (device_api == reshade::api::device_api::d3d9) {
+    shader_stage = reshade::api::shader_stage::pixel;
+  } else if (is_dispatch) {
+    shader_stage = reshade::api::shader_stage::all_compute;
+  } else {
+    shader_stage = reshade::api::shader_stage::all_graphics;
+  }
+
   const std::shared_lock lock(renodx::utils::mutex::global_mutex);
   cmd_list->push_constants(
-      is_dispatch ? reshade::api::shader_stage::all_compute : reshade::api::shader_stage::all_graphics,
+      shader_stage,
       injection_layout,
       injection_index,
-      0,
+      constant_buffer_offset,
       shader_injection_size,
       shader_injection);
   return true;
@@ -815,6 +845,10 @@ inline bool HandlePreDraw(
 
   if (!is_dispatch && resource_tag_float != nullptr) {
     auto* swapchain_state = renodx::utils::data::Get<renodx::utils::swapchain::CommandListData>(cmd_list);
+    if (swapchain_state == nullptr) {
+      reshade::log::message(reshade::log::level::error, "mods::shader::HandlePreDraw(swapchain state is null)");
+      return false;
+    }
     if (!swapchain_state->current_render_targets.empty()) {
       auto rv = swapchain_state->current_render_targets.at(0);
       resource_tag = renodx::utils::resource::GetResourceTag(rv);

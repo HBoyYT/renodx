@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include <functional>
-#include <include/reshade_api_device.hpp>
 #include <mutex>
 #include <shared_mutex>
 #include <sstream>
@@ -91,6 +90,7 @@ struct ResourceUpgradeInfo {
   bool use_resource_view_hot_swap = false;
   reshade::api::resource_usage usage = reshade::api::resource_usage::undefined;
   reshade::api::resource_usage state = reshade::api::resource_usage::undefined;
+  bool use_shared_handle = false;
 
   static const int16_t BACK_BUFFER = -1;
   static const int16_t ANY = -2;
@@ -198,6 +198,7 @@ struct ResourceInfo {
   float resource_tag = -1;
   reshade::api::resource_view swap_chain_proxy_clone_srv = {0u};
   reshade::api::resource_view swap_chain_proxy_rtv = {0u};
+  void* shared_handle = nullptr;
 };
 
 struct ResourceViewInfo {
