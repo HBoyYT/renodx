@@ -7,7 +7,10 @@
 
 #define NOMINMAX
 
+#include <initguid.h>
+
 #include <algorithm>
+#include <cstdint>
 #include <optional>
 #include <sstream>
 
@@ -19,6 +22,14 @@
 #include "./pipeline_layout.hpp"
 #include "./resource.hpp"
 #include "./shader.hpp"
+
+// Define WKPDID_D3DDebugObjectName and WKPDID_D3DDebugObjectNameW if not already defined
+#ifndef WKPDID_D3DDebugObjectName
+DEFINE_GUID(WKPDID_D3DDebugObjectName, 0x429b8c22, 0x9188, 0x4b0c, 0x87, 0x42, 0xac, 0xb0, 0xbf, 0x85, 0xc2, 0x00);
+#endif
+#ifndef WKPDID_D3DDebugObjectNameW
+DEFINE_GUID(WKPDID_D3DDebugObjectNameW, 0x4cca5fd8, 0x921f, 0x42c8, 0x85, 0x66, 0x70, 0xca, 0x1f, 0xa6, 0x2a, 0x85);
+#endif
 
 namespace renodx::utils::trace {
 
@@ -108,6 +119,7 @@ static uint32_t present_count = 0;
 static bool attached = false;
 
 static uint64_t GetResourceByViewHandle(DeviceData* data, uint64_t handle) {
+  if (handle == 0) return 0;
   auto* resource_view_info = renodx::utils::resource::GetResourceViewInfo({handle});
   if (resource_view_info == nullptr) return 0;
   if (resource_view_info->resource_info == nullptr) return 0;
@@ -118,6 +130,7 @@ static uint64_t GetResourceByViewHandle(DeviceData* data, uint64_t handle) {
 
 static std::string GetResourceNameByViewHandle(DeviceData* data, uint64_t handle) {
   if (!TRACE_NAMES) return "?";
+  if (handle == 0) return "?";
   auto* resource_view_info = renodx::utils::resource::GetResourceViewInfo({handle});
 
   if (resource_view_info == nullptr) return "?";
@@ -308,19 +321,69 @@ static void LogLayout(
         break;
       }
       case reshade::api::pipeline_layout_param_type::push_descriptors_with_ranges: {
-        std::stringstream s;
-        s << "logPipelineLayout(";
-        s << PRINT_PTR(layout.handle) << "[" << param_index << "]";
-        s << " | PDR | ";
-        s << " array_size: " << param.push_descriptors.array_size;
-        s << ", binding: " << param.push_descriptors.binding;
-        s << ", count " << param.push_descriptors.count;
-        s << ", register: " << param.push_descriptors.dx_register_index;
-        s << ", space: " << param.push_descriptors.dx_register_space;
-        s << ", type: " << param.push_descriptors.type;
-        s << ", visibility " << param.push_descriptors.visibility;
-        s << ")";
-        reshade::log::message(reshade::log::level::info, s.str().c_str());
+        for (uint32_t range_index = 0; range_index < param.descriptor_table.count; ++range_index) {
+          auto range = param.descriptor_table.ranges[range_index];
+          std::stringstream s;
+          s << "logPipelineLayout(";
+          s << PRINT_PTR(layout.handle) << "[" << param_index << "]";
+          s << " | PDR | ";
+          s << PRINT_PTR((uintptr_t)param.descriptor_table.ranges);
+          s << " | ";
+          switch (range.type) {
+            case reshade::api::descriptor_type::sampler:
+              s << "SMP";
+              break;
+            case reshade::api::descriptor_type::sampler_with_resource_view:
+              s << "SMPRV";
+              break;
+            case reshade::api::descriptor_type::texture_shader_resource_view:
+              s << "TSRV";
+              break;
+            case reshade::api::descriptor_type::texture_unordered_access_view:
+              s << "TUAV";
+              break;
+            case reshade::api::descriptor_type::buffer_shader_resource_view:
+              s << "BSRV";
+              break;
+            case reshade::api::descriptor_type::buffer_unordered_access_view:
+              s << "BUAV";
+              break;
+            case reshade::api::descriptor_type::constant_buffer:
+              s << "CBV";
+              break;
+            case reshade::api::descriptor_type::shader_storage_buffer:
+              s << "SSB";
+              break;
+            case reshade::api::descriptor_type::acceleration_structure:
+              s << "ACC";
+              break;
+            default:
+              s << "??? (0x" << std::hex << static_cast<uint32_t>(range.type) << std::dec << ")";
+          }
+
+          s << ", array_size: " << range.array_size;
+          s << ", binding: " << range.binding;
+          s << ", count: " << range.count;
+          s << ", register: " << range.dx_register_index;
+          s << ", space: " << range.dx_register_space;
+          s << ", visibility: " << range.visibility;
+          s << ")";
+          s << " [" << range_index << "/" << param.descriptor_table.count << "]";
+          reshade::log::message(reshade::log::level::info, s.str().c_str());
+        }
+        // std::stringstream s;
+        // s << "logPipelineLayout(";
+        // s << PRINT_PTR(layout.handle) << "[" << param_index << "]";
+        // s << " | PDR | ";
+        // s << " array_size: " << param.descriptor_table.array_size;
+        // s << ", binding: " << param.push_descriptors.binding;
+        // s << ", count " << param.push_descriptors.count;
+        // s << ", register: " << param.push_descriptors.dx_register_index;
+        // s << ", space: " << param.push_descriptors.dx_register_space;
+        // s << ", type: " << param.push_descriptors.type;
+        // s << ", visibility " << param.push_descriptors.visibility;
+        // s << ")";
+        // reshade::log::message(reshade::log::level::info, s.str().c_str());
         break;
       }
 #if RESHADE_API_VERSION >= 13
@@ -410,6 +473,9 @@ static void OnInitPipelineLayout(
     const reshade::api::pipeline_layout_param* params,
     reshade::api::pipeline_layout layout) {
   if (!is_primary_hook) return;
+  if (layout.handle == 0u) {
+    assert(layout.handle != 0u);
+  }
   LogLayout(param_count, params, layout);
 
   const bool found_visiblity = false;
@@ -451,7 +517,7 @@ static bool OnCreatePipeline(
     uint32_t subobject_count,
     const reshade::api::pipeline_subobject* subobjects) {
   if (!is_primary_hook) return false;
-  if (!trace_running && !trace_pipeline_creation) return false;
+  if (!trace_running || !trace_pipeline_creation) return false;
   if (subobject_count == 0) {
     std::stringstream s;
     s << "OnCreatePipeline(";
@@ -635,7 +701,11 @@ static void OnBindPipeline(
   std::stringstream s;
   s << "bind_pipeline(";
   s << PRINT_PTR(pipeline.handle);
-  auto* details = renodx::utils::shader::GetPipelineShaderDetails(pipeline);
+
+  renodx::utils::shader::PipelineShaderDetails* details = nullptr;
+  if (pipeline.handle != 0u && stages != reshade::api::pipeline_stage::ray_tracing_shader) {
+    details = renodx::utils::shader::GetPipelineShaderDetails(pipeline);
+  }
   if (details != nullptr) {
     s << ", layout: " << PRINT_PTR(details->layout.handle);
     for (const auto& info : details->subobject_shaders) {
@@ -754,11 +824,11 @@ static bool OnCopyTextureRegion(
   s << "OnCopyTextureRegion";
   s << "(" << PRINT_PTR(source.handle);
   s << ", " << (source_desc.texture.format);
-  s << ", " << (source_subresource);
-  s << " => " << PRINT_PTR(dest.handle);
+  s << "[" << (source_subresource);
+  s << "] => " << PRINT_PTR(dest.handle);
   s << ", " << (dest_desc.texture.format);
-  s << ", " << (dest_subresource);
-  s << ", " << static_cast<uint32_t>(filter);
+  s << "[" << (dest_subresource);
+  s << "], filter: " << static_cast<uint32_t>(filter);
   s << ")";
   reshade::log::message(reshade::log::level::info, s.str().c_str());
 
@@ -927,8 +997,10 @@ static void OnBindRenderTargetsAndDepthStencil(
       std::stringstream s;
       s << "on_bind_render_targets(";
       s << PRINT_PTR(rtv.handle);
-      s << ", res: " << PRINT_PTR(GetResourceByViewHandle(data, rtv.handle));
-      s << ", name: " << GetResourceNameByViewHandle(data, rtv.handle);
+      if (rtv.handle != 0u) {
+        s << ", res: " << PRINT_PTR(GetResourceByViewHandle(data, rtv.handle));
+        s << ", name: " << GetResourceNameByViewHandle(data, rtv.handle);
+      }
       s << ")";
       s << "[" << i << "]";
       reshade::log::message(reshade::log::level::info, s.str().c_str());
@@ -1079,7 +1151,7 @@ static void OnPushDescriptors(
     uint32_t layout_param,
     const reshade::api::descriptor_table_update& update) {
   if (!is_primary_hook) return;
-  if (!trace_running) return;
+  if (!FORCE_ALL && !trace_running) return;
   auto* device = cmd_list->get_device();
   auto* data = renodx::utils::data::Get<DeviceData>(device);
   const std::shared_lock lock(data->mutex);
@@ -1113,7 +1185,9 @@ static void OnPushDescriptors(
         auto item = static_cast<const reshade::api::sampler_with_resource_view*>(update.descriptors)[i];
         s << ", sampler: " << PRINT_PTR(item.sampler.handle);
         s << ", rsv: " << PRINT_PTR(item.view.handle);
-        s << ", res: " << PRINT_PTR(GetResourceByViewHandle(data, item.view.handle));
+        if (item.view.handle != 0u) {
+          s << ", res: " << PRINT_PTR(GetResourceByViewHandle(data, item.view.handle));
+        }
         // s << ", name: " << getResourceNameByViewHandle(data, item.view.handle);
         break;
       }
@@ -1122,7 +1196,9 @@ static void OnPushDescriptors(
         s << log_heap();
         auto item = static_cast<const reshade::api::resource_view*>(update.descriptors)[i];
         s << ", shaderrsv: " << PRINT_PTR(item.handle);
-        s << ", res:" << PRINT_PTR(GetResourceByViewHandle(data, item.handle));
+        if (item.handle != 0u) {
+          s << ", res:" << PRINT_PTR(GetResourceByViewHandle(data, item.handle));
+        }
         // s << ", name: " << getResourceNameByViewHandle(data, item.handle);
         break;
       }
@@ -1131,7 +1207,9 @@ static void OnPushDescriptors(
         s << log_heap();
         auto item = static_cast<const reshade::api::resource_view*>(update.descriptors)[i];
         s << ", uav: " << PRINT_PTR(item.handle);
-        s << ", res:" << PRINT_PTR(GetResourceByViewHandle(data, item.handle));
+        if (item.handle != 0u) {
+          s << ", res:" << PRINT_PTR(GetResourceByViewHandle(data, item.handle));
+        }
         // s << ", name: " << getResourceNameByViewHandle(data, item.handle);
         break;
       }
@@ -1166,8 +1244,12 @@ static void OnBindDescriptorTables(
     uint32_t count,
     const reshade::api::descriptor_table* tables) {
   if (!is_primary_hook) return;
-  if (!trace_running) return;
+  if (!FORCE_ALL && !trace_running) return;
   auto* device = cmd_list->get_device();
+  if (count == 0 && layout.handle == 0u) {
+    reshade::log::message(reshade::log::level::info, "bind_descriptor_table(empty)");
+    return;
+  } 
 
   auto* layout_data = pipeline_layout::GetPipelineLayoutData(layout);
   renodx::utils::descriptor::DeviceData* descriptor_data = nullptr;
@@ -1274,7 +1356,7 @@ static bool OnCopyDescriptorTables(
     uint32_t count,
     const reshade::api::descriptor_table_copy* copies) {
   if (!is_primary_hook) return false;
-  if (!trace_running && present_count >= trace_initial_frame_count) return false;
+  if (!FORCE_ALL && !trace_running && present_count >= trace_initial_frame_count) return false;
 
   renodx::utils::descriptor::DeviceData* descriptor_data = nullptr;
 
@@ -1335,7 +1417,7 @@ static bool OnUpdateDescriptorTables(
     const reshade::api::descriptor_table_update* updates) {
   if (!is_primary_hook) return false;
 
-  if (!trace_running && present_count >= trace_initial_frame_count) return false;
+  if (!FORCE_ALL && !trace_running && present_count >= trace_initial_frame_count) return false;
 
   for (uint32_t i = 0; i < count; i++) {
     const auto& update = updates[i];
@@ -1416,9 +1498,14 @@ static bool OnUpdateDescriptorTables(
           s << ", offset: " << item.offset;
           break;
         }
-        case reshade::api::descriptor_type::acceleration_structure:
-          s << ", accl: unknown";
+        case reshade::api::descriptor_type::acceleration_structure: {
+          auto item = static_cast<const reshade::api::resource_view*>(update.descriptors)[j];
+          s << ", accl: " << PRINT_PTR(item.handle);
+          auto* data = renodx::utils::data::Get<DeviceData>(device);
+          const std::shared_lock lock(data->mutex);
+          s << ", res:" << PRINT_PTR(GetResourceByViewHandle(data, item.handle));
           break;
+        }
         default:
           break;
       }
@@ -1682,7 +1769,7 @@ static void Use(DWORD fdw_reason) {
       // unmap_texture_region
       reshade::register_event<reshade::addon_event::update_buffer_region>(internal::OnUpdateBufferRegion);
       reshade::register_event<reshade::addon_event::update_texture_region>(internal::OnUpdateTextureRegion);
-      // reshade::register_event<reshade::addon_event::init_pipeline>(internal::OnInitPipeline);
+      reshade::register_event<reshade::addon_event::init_pipeline>(internal::OnInitPipeline);
       reshade::register_event<reshade::addon_event::create_pipeline>(internal::OnCreatePipeline);
       reshade::register_event<reshade::addon_event::destroy_pipeline>(internal::OnDestroyPipeline);
       reshade::register_event<reshade::addon_event::init_pipeline_layout>(internal::OnInitPipelineLayout);
