@@ -33,22 +33,22 @@
 #include <include/reshade.hpp>
 
 #include <crc32_hash.hpp>
-#include "../mods/swapchain.hpp"
-#include "../utils/bitwise.hpp"
-#include "../utils/constants.hpp"
-#include "../utils/data.hpp"
-#include "../utils/date.hpp"
-#include "../utils/descriptor.hpp"
-#include "../utils/format.hpp"
-#include "../utils/pipeline_layout.hpp"
-#include "../utils/shader.hpp"
-#include "../utils/shader_compiler_directx.hpp"
-#include "../utils/shader_compiler_watcher.hpp"
-#include "../utils/shader_decompiler_dxc.hpp"
-#include "../utils/shader_dump.hpp"
-#include "../utils/string_view.hpp"
-#include "../utils/swapchain.hpp"
-#include "../utils/trace.hpp"
+#include "../../mods/swapchain.hpp"
+#include "../../utils/bitwise.hpp"
+#include "../../utils/constants.hpp"
+#include "../../utils/data.hpp"
+#include "../../utils/date.hpp"
+#include "../../utils/descriptor.hpp"
+#include "../../utils/format.hpp"
+#include "../../utils/pipeline_layout.hpp"
+#include "../../utils/shader.hpp"
+#include "../../utils/shader_compiler_directx.hpp"
+#include "../../utils/shader_compiler_watcher.hpp"
+#include "../../utils/shader_decompiler_dxc.hpp"
+#include "../../utils/shader_dump.hpp"
+#include "../../utils/string_view.hpp"
+#include "../../utils/swapchain.hpp"
+#include "../../utils/trace.hpp"
 
 #define ICON_FK_CANCEL      reinterpret_cast<const char*>(u8"\uf00d")
 #define ICON_FK_FILE        reinterpret_cast<const char*>(u8"\uf016")
@@ -2828,6 +2828,31 @@ void DrawSettingUint32Textbox(const char* label, const char* key, T* value) {
   ImGui::PopID();
 }
 
+template <typename T = float>
+void DrawSettingDecimalTextbox(const char* label, const char* key, T* value) {
+  char temp[32] = "";
+  T temp_value = *value;
+  std::format("{}", temp_value).copy(temp, 32);
+
+  ImGui::PushID(key);
+  if (ImGui::InputText(label, temp, 32, ImGuiInputTextFlags_CharsDecimal)) {
+    std::string temp_string = temp;
+    auto pos = temp_string.find_last_not_of("\t\n\v\f\r ");
+    if (pos != std::string_view::npos) {
+      temp_string = {temp_string.data(), temp_string.data() + pos + 1};
+    }
+
+    if (temp_string.empty()) {
+      temp_value = 0;
+    } else {
+      std::from_chars(temp_string.data(), temp_string.data() + temp_string.size(), temp_value);
+    }
+    *value = temp_value;
+    reshade::set_config_value(nullptr, "renodx-dev", key, temp_value);
+  }
+  ImGui::PopID();
+}
+
 void RenderSettingsPane(reshade::api::device* device, DeviceData* data) {
   {
     ImGui::SeparatorText("Snapshot");
@@ -2901,6 +2926,11 @@ void RenderSettingsPane(reshade::api::device* device, DeviceData* data) {
     DrawSettingBoolCheckbox("Trace Descriptor Tables", "TraceDescriptorTables", &renodx::utils::descriptor::trace_descriptor_tables);
     DrawSettingBoolCheckbox("Trace Constant Buffers", "TraceConstantBuffers", &renodx::utils::constants::capture_constant_buffers);
     DrawSettingUint32Textbox("Trace Initial Frame Count", "TraceInitialFrameCount", &renodx::utils::trace::trace_initial_frame_count);
+  }
+
+  {
+    ImGui::SeparatorText("Other");
+    DrawSettingDecimalTextbox("FPS Limit", "FPS Limit", &renodx::utils::swapchain::fps_limit);
   }
 
   ImGui::Text("%s", (std::string("Build: ") + __DATE__ + " " + renodx::utils::date::ISO_DATE_TIME).c_str());
