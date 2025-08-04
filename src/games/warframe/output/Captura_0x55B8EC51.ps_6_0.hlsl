@@ -1,0 +1,211 @@
+#include "../shared.h"
+#include "../common.hlsl"
+
+Texture2D<float4> t0 : register(t0);
+
+Texture2D<float4> t1 : register(t1);
+
+Texture2D<float4> t2 : register(t2);
+
+Texture3D<float4> t3 : register(t3);
+
+Texture2D<float4> t4 : register(t4);
+
+Texture2D<float4> t10 : register(t10);
+
+Texture2D<float4> t8 : register(t8);
+
+cbuffer cb0 : register(b0) {
+  float cb0_000z : packoffset(c000.z);
+  float cb0_000w : packoffset(c000.w);
+  float cb0_001x : packoffset(c001.x);
+  float cb0_001y : packoffset(c001.y);
+  float cb0_001z : packoffset(c001.z);
+  float cb0_002x : packoffset(c002.x);
+  float cb0_002y : packoffset(c002.y);
+  float cb0_002z : packoffset(c002.z);
+  float cb0_002w : packoffset(c002.w);
+  float cb0_003x : packoffset(c003.x);
+  float cb0_004x : packoffset(c004.x);
+  float cb0_009x : packoffset(c009.x);
+  float cb0_009y : packoffset(c009.y);
+  float cb0_010x : packoffset(c010.x);
+  float cb0_010y : packoffset(c010.y);
+  float cb0_011x : packoffset(c011.x);
+  float cb0_011y : packoffset(c011.y);
+  float cb0_014x : packoffset(c014.x);
+  float cb0_014y : packoffset(c014.y);
+  float cb0_015x : packoffset(c015.x);
+  float cb0_016x : packoffset(c016.x);
+};
+
+SamplerState s0 : register(s0);
+
+SamplerState s1 : register(s1);
+
+SamplerState s2 : register(s2);
+
+SamplerState s3 : register(s3);
+
+SamplerState s4 : register(s4);
+
+SamplerState s10 : register(s10);
+
+SamplerState s8 : register(s8);
+
+float4 main(
+  noperspective float4 SV_Position : SV_Position,
+  linear float4 TEXCOORD : TEXCOORD,
+  linear float4 TEXCOORD_1 : TEXCOORD1
+) : SV_Target {
+  float4 SV_Target;
+  float _25 = cb0_014x * TEXCOORD.x;
+  float _26 = cb0_014y * TEXCOORD.y;
+  float _27 = min(_25, cb0_009x);
+  float _28 = min(_26, cb0_009y);
+  float4 _29 = t10.SampleLevel(s10, float2(_27, _28), 0.0f);
+  float4 _48 = t4.SampleLevel(s4, float2(min(_27, cb0_009x), min(_28, cb0_009y)), 0.0f);
+  float _54 = cb0_000w / (_48.x - cb0_000z);
+  float _57 = ((((cb0_002x * 32.0f) * cb0_002z) * ((_29.x * 2.0f) + -1.0f)) + TEXCOORD.x) * cb0_002z;
+  float _58 = (TEXCOORD.y - ((cb0_002w * cb0_002y) * ((_29.y * 64.0f) + -32.0f))) * cb0_002w;
+  float4 _61 = t0.SampleLevel(s0, float2(min(_57, cb0_009x), min(_58, cb0_009y)), 0.0f);
+  float _65 = TEXCOORD.x + -0.5f;
+  float _66 = TEXCOORD.y + -0.5f;
+  float _67 = cb0_002z * _65;
+  float _68 = cb0_002w * _66;
+  float _72 = sqrt((_67 * _67) + (_68 * _68));
+  float _77 = ((_72 * _72) * cb0_004x * RENODX_FX_CA_STRENGTH) / _72;
+  float _79 = (_67 * cb0_002x) * _77;
+  float _81 = (_68 * cb0_002y) * _77;
+  float4 _88 = t0.SampleLevel(s0, float2(min((_57 - _79), cb0_009x), min((_58 - _81), cb0_009y)), 0.0f);
+  float4 _102 = t0.SampleLevel(s0, float2(min((_79 + _57), cb0_009x), min((_81 + _58), cb0_009y)), 0.0f);
+  float _109 = (_102.x * 0.800000011920929f) + ((_88.x + _61.x) * 0.10000000149011612f);
+  float _110 = ((_88.y * 0.699999988079071f) + (_61.y * 0.20000000298023224f)) + (_102.y * 0.10000000149011612f);
+  float _111 = ((_88.z * 0.20000000298023224f) + (_61.z * 0.10000000149011612f)) + (_102.z * 0.699999988079071f);
+  float _115 = min(_25, cb0_010x);
+  float _116 = min(_26, cb0_010y);
+  float4 _117 = t2.SampleLevel(s2, float2(_115, _116), 0.0f);
+  float4 _128 = t2.SampleLevel(s2, float2(min((_25 - _79), cb0_010x), min((_26 - _81), cb0_010y)), 0.0f);
+  float4 _140 = t2.SampleLevel(s2, float2(min((_79 + _25), cb0_010x), min((_81 + _26), cb0_010y)), 0.0f);
+  float _161 = _65 * 3.555555582046509f;
+  float _162 = _66 * 3.555555582046509f;
+  float _165 = sqrt(dot(float2(_161, _162), float2(_161, _162))) * 0.25f * RENODX_FX_VIGNETTE_STRENGTH;
+  float _167 = (_165 * _165) + 1.0f;
+  float _170 = (1.0f / (_167 * _167)) * TEXCOORD_1.w;
+  float _171 = ((((((_128.x + _117.x) * 0.10000000149011612f) - _109) + (_140.x * 0.800000011920929f)) * _117.w) + _109) * _170;
+  float _172 = ((((((_117.y * 0.20000000298023224f) - _110) + (_128.y * 0.699999988079071f)) + (_140.y * 0.10000000149011612f)) * _117.w) + _110) * _170;
+  float _173 = ((((((_117.z * 0.10000000149011612f) - _111) + (_128.z * 0.20000000298023224f)) + (_140.z * 0.699999988079071f)) * _117.w) + _111) * _170;
+  float4 _174 = t1.SampleLevel(s1, float2(_115, _116), 0.0f);
+  float _185 = saturate((_54 + -500.0f) * 0.0020000000949949026f) * 0.22499999403953552f;
+  float _201 = (saturate(cb0_001x + _185) * ((_174.x * 0.20000000298023224f) - _171)) + _171;
+  float _202 = (saturate(cb0_001y + _185) * ((_174.y * 0.20000000298023224f) - _172)) + _172;
+  float _203 = (saturate(cb0_001z + _185) * ((_174.z * 0.20000000298023224f) - _173)) + _173;
+  float _213 = exp2(log2(_201 * 0.009999999776482582f) * 0.1593017578125f);
+  float _214 = exp2(log2(_202 * 0.009999999776482582f) * 0.1593017578125f);
+  float _215 = exp2(log2(_203 * 0.009999999776482582f) * 0.1593017578125f);
+  float4 _246 = t3.Sample(s3, float3(((exp2(log2(((_213 * 18.8515625f) + 0.8359375f) / ((_213 * 18.6875f) + 1.0f)) * 78.84375f) * 0.96875f) + 0.015625f), ((exp2(log2(((_214 * 18.8515625f) + 0.8359375f) / ((_214 * 18.6875f) + 1.0f)) * 78.84375f) * 0.96875f) + 0.015625f), ((exp2(log2(((_215 * 18.8515625f) + 0.8359375f) / ((_215 * 18.6875f) + 1.0f)) * 78.84375f) * 0.96875f) + 0.015625f)));
+  float _256 = saturate((_54 - cb0_011x) / (cb0_011y - cb0_011x));
+  float _260 = max(0.0f, (_201 + -0.004000000189989805f));
+  float _261 = max(0.0f, (_202 + -0.004000000189989805f));
+  float _262 = max(0.0f, (_203 + -0.004000000189989805f));
+  float _263 = _260 * 6.199999809265137f;
+  float _264 = _261 * 6.199999809265137f;
+  float _265 = _262 * 6.199999809265137f;
+  float _281 = ((_263 + 0.5f) * _260) / (((_263 + 1.7000000476837158f) * _260) + 0.05999999865889549f);
+  float _282 = ((_264 + 0.5f) * _261) / (((_264 + 1.7000000476837158f) * _261) + 0.05999999865889549f);
+  float _283 = ((_265 + 0.5f) * _262) / (((_265 + 1.7000000476837158f) * _262) + 0.05999999865889549f);
+  float _290 = ((_246.x - _281) * _256) + _281;
+  float _291 = ((_246.y - _282) * _256) + _282;
+  float _292 = ((_246.z - _283) * _256) + _283;
+  float _293 = dot(float3(_290, _291, _292), float3(0.2125999927520752f, 0.7152000069618225f, 0.0722000002861023f));
+  float _296 = cb0_003x * 0.0009765625f;
+  float _300 = frac(abs(_296));
+  float _306 = frac(TEXCOORD.x * 5.39870023727417f);
+  float _307 = frac(TEXCOORD.y * 5.4421000480651855f);
+  float _308 = frac(select((_296 >= (-0.0f - _296)), _300, (-0.0f - _300)) * 7103.59033203125f);
+  float _312 = dot(float3(_307, _308, _306), float3((_306 + 21.53510093688965f), (_307 + 14.313699722290039f), (_308 + 15.324700355529785f)));
+  float _313 = _312 + _306;
+  float _314 = _312 + _307;
+  float _315 = _312 + _308;
+  float _316 = _313 * _314;
+  float _328 = frac(_316 * 97.59010314941406f) + -0.5f;
+  float _329 = frac((_315 * 93.83689880371094f) * _313) + -0.5f;
+  float _330 = frac((_315 * 91.69309997558594f) * _314) + -0.5f;
+  float _349 = (frac(_316 * 95.43070220947266f) + -0.5f) + ((select((_290 < 0.0019607844296842813f), 0.0f, 1.0f) * select((_290 > 0.998039186000824f), 0.0f, 1.0f)) * _328);
+  float _350 = ((select((_291 < 0.0019607844296842813f), 0.0f, 1.0f) * select((_291 > 0.998039186000824f), 0.0f, 1.0f)) * _329) + _328;
+  float _351 = ((select((_292 < 0.0019607844296842813f), 0.0f, 1.0f) * select((_292 > 0.998039186000824f), 0.0f, 1.0f)) * _330) + _329;
+  float _364 = (saturate(1.0f - _293) * dot(float4(_349, _350, _351, _330), float4(0.3333333432674408f, 0.3333333432674408f, 0.3333333432674408f, 0.3333333432674408f))) * cb0_015x;
+  float _368 = saturate(((_349 * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + _290) + _364);
+  float _369 = saturate(((_350 * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + _291) + _364);
+  float _370 = saturate(((_351 * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + _292) + _364);
+  float4 _371 = t8.Sample(s8, float2(TEXCOORD.x, TEXCOORD.y));
+  float _527;
+  float _528;
+  float _529;
+  [branch]
+  if ((!(_371.w < 9.999999747378752e-05f)) && (RENODX_FX_ENABLE_UI == 1.f)) {
+    float _380 = cb0_016x * 9.999999747378752e-05f;
+
+    float _419;
+    float _422;
+    float _425;
+
+    if (RENODX_TONE_MAP_TYPE == 0.f) {
+      float _387 = (pow(_368, 0.012683313339948654f));
+      float _388 = (pow(_369, 0.012683313339948654f));
+      float _389 = (pow(_370, 0.012683313339948654f));
+      float _414 = exp2(log2(max((_387 + -0.8359375f), 0.0f) / (18.8515625f - (_387 * 18.6875f))) * 6.277394771575928f) / _380;
+      float _415 = exp2(log2(max((_388 + -0.8359375f), 0.0f) / (18.8515625f - (_388 * 18.6875f))) * 6.277394771575928f) / _380;
+      float _416 = exp2(log2(max((_389 + -0.8359375f), 0.0f) / (18.8515625f - (_389 * 18.6875f))) * 6.277394771575928f) / _380;
+      _419 = mad(-0.07283999770879745f, _416, mad(-0.5876560211181641f, _415, (_414 * 1.6604959964752197f)));
+      _422 = mad(-0.00834800023585558f, _416, mad(1.1328949928283691f, _415, (_414 * -0.12454699724912643f)));
+      _425 = mad(1.118751049041748f, _416, mad(-0.10059700161218643f, _415, (_414 * -0.018154000863432884f)));
+    } else {
+      float3 color = float3(_368, _369, _370);
+      color = renodx::color::pq::DecodeSafe(color, RENODX_GRAPHICS_WHITE_NITS);
+      color = renodx::color::bt709::from::BT2020(color);
+      _419 = color.r;
+      _422 = color.g;
+      _425 = color.b;
+    }
+    
+    
+    float _450 = 1.0f - _371.w;
+    float _454 = (select((_419 <= 0.0031308000907301903f), (_419 * 12.920000076293945f), (((pow(_419, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f)) * _450) + _371.x;
+    float _455 = (select((_422 <= 0.0031308000907301903f), (_422 * 12.920000076293945f), (((pow(_422, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f)) * _450) + _371.y;
+    float _456 = (select((_425 <= 0.0031308000907301903f), (_425 * 12.920000076293945f), (((pow(_425, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f)) * _450) + _371.z;
+    float _478 = select((_454 <= 0.0392800010740757f), (_454 * 0.07739938050508499f), exp2(log2((_454 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f));
+    float _479 = select((_455 <= 0.0392800010740757f), (_455 * 0.07739938050508499f), exp2(log2((_455 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f));
+    float _480 = select((_456 <= 0.0392800010740757f), (_456 * 0.07739938050508499f), exp2(log2((_456 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f));
+
+    if (RENODX_TONE_MAP_TYPE == 0.f) {
+      float _499 = exp2(log2(mad(0.04331360012292862f, _480, mad(0.3292819857597351f, _479, (_478 * 0.627403974533081f))) * _380) * 0.1593017578125f);
+      float _500 = exp2(log2(mad(0.012477199546992779f, _480, mad(0.9417769908905029f, _479, (_478 * 0.045745600014925f))) * _380) * 0.1593017578125f);
+      float _501 = exp2(log2(mad(0.9836069941520691f, _480, mad(0.017604099586606026f, _479, (_478 * -0.0012105499627068639f))) * _380) * 0.1593017578125f);
+      _527 = exp2(log2(((_499 * 18.8515625f) + 0.8359375f) / ((_499 * 18.6875f) + 1.0f)) * 78.84375f);
+      _528 = exp2(log2(((_500 * 18.8515625f) + 0.8359375f) / ((_500 * 18.6875f) + 1.0f)) * 78.84375f);
+      _529 = exp2(log2(((_501 * 18.8515625f) + 0.8359375f) / ((_501 * 18.6875f) + 1.0f)) * 78.84375f);
+    } else {
+      float3 color = float3(_478, _479, _480);
+      color = renodx::color::bt2020::from::BT709(color);
+      color = renodx::color::pq::EncodeSafe(color, RENODX_GRAPHICS_WHITE_NITS);
+      _527 = color.r;
+      _528 = color.g;
+      _529 = color.b;
+    }
+  
+  
+  } else {
+    _527 = _368;
+    _528 = _369;
+    _529 = _370;
+  }
+  SV_Target.x = _527;
+  SV_Target.y = _528;
+  SV_Target.z = _529;
+
+  SV_Target.rgb = OutputShaderPass(SV_Target.rgb);
+
+  SV_Target.w = _293;
+  return SV_Target;
+}
