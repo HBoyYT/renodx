@@ -163,7 +163,7 @@ float4 main(
       color = renodx::color::pq::DecodeSafe(color, RENODX_GRAPHICS_WHITE_NITS);
       color = renodx::color::bt709::from::BT2020(color);
       _464 = color.r;
-      _464 = color.g;
+      _467 = color.g;
       _470 = color.b;
     }
     

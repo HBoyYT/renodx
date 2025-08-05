@@ -199,8 +199,8 @@ float4 main(
       _599 = exp2(log2(((_571 * 18.8515625f) + 0.8359375f) / ((_571 * 18.6875f) + 1.0f)) * 78.84375f);
     } else {
       float3 color = float3(_548, _549, _550);
-      color = renodx::color::pq::DecodeSafe(color, RENODX_GRAPHICS_WHITE_NITS);
-      color = renodx::color::bt709::from::BT2020(color);
+      color = renodx::color::bt2020::from::BT709(color);
+      color = renodx::color::pq::EncodeSafe(color, RENODX_GRAPHICS_WHITE_NITS);
       _597 = color.r;
       _598 = color.g;
       _599 = color.b;
