@@ -323,7 +323,7 @@
      },
      new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "- This mod only using DirectX 12, you can change this in the Warframe launcher."
+        .label = "- This mod only works using DirectX 12, you can change this in the Warframe launcher."
                  "\n- Enable 'HDR Output' in the game's settings. The HDR paper white slider shouldn't do anything, you can just set it to what you have in RenoDX."
                  "\n- Enable 'Bloom' and 'Distortions' in the game's settings"
                  "\n\nPlease note, some settings require a 'scene chaange' for them to apply. Examples of 'scene changes' include:"
