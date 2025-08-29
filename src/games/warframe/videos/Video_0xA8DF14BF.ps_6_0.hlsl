@@ -43,7 +43,7 @@ float4 main(
   SV_Target.x = (_90 * ((((bool)((_50 <= 0.0392800010740757f))) ? (_50 * 0.07739938050508499f) : (exp2(((log2(((_50 + 0.054999999701976776f) * 0.9478673338890076f))) * 2.4000000953674316f))))));
   SV_Target.y = (_90 * ((((bool)((_51 <= 0.0392800010740757f))) ? (_51 * 0.07739938050508499f) : (exp2(((log2(((_51 + 0.054999999701976776f) * 0.9478673338890076f))) * 2.4000000953674316f))))));
   SV_Target.z = (_90 * ((((bool)((_52 <= 0.0392800010740757f))) ? (_52 * 0.07739938050508499f) : (exp2(((log2(((_52 + 0.054999999701976776f) * 0.9478673338890076f))) * 2.4000000953674316f))))));
-  SV_Target.rgb = GammaColorSpace(SV_Target.rgb);
+  GammaColorSpaceCorrection(SV_Target.rgb);
   SV_Target.rgb = renodx::color::srgb::EncodeSafe(SV_Target.rgb);
   SV_Target.w = _90;
   return SV_Target;

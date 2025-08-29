@@ -113,7 +113,7 @@ float4 main(
   SV_Target.z = ((((((min((max((((((_245 * 0.0003652969317045063f) + (_223 * 2.0f)) + (_252 * 0.004121614620089531f)) - (_259 * 0.693511426448822f)) + _272), 0.0f)), 1.0f)) * _207) - _195) + (_223 * _292)) * (cb0_083y)) + _195);
   SV_Target.w = (saturate(((cb0_001w) + _166)));
   SV_Target.rgb = renodx::color::srgb::DecodeSafe(SV_Target.rgb);
-  SV_Target.rgb = GammaColorSpace(SV_Target.rgb);
+  GammaColorSpaceCorrection(SV_Target.rgb);
   SV_Target.rgb = renodx::color::srgb::EncodeSafe(SV_Target.rgb);
   return SV_Target;
 }
