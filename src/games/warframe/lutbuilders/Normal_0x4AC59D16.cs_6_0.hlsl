@@ -155,22 +155,19 @@ void main(
   float _508 = ((((((((_457 * 2708.714111328125f) + 6801.15234375f) * _457) + 1079.54736328125f) * _457) + 1.1614649295806885f) * _457) + -4.139374868827872e-05f) / ((((((((_457 * 983.3893432617188f) + 4132.06640625f) * _457) + 2881.652099609375f) * _457) + 128.35911560058594f) * _457) + 1.0f);
   float _509 = ((((((((_458 * 2708.714111328125f) + 6801.15234375f) * _458) + 1079.54736328125f) * _458) + 1.1614649295806885f) * _458) + -4.139374868827872e-05f) / ((((((((_458 * 983.3893432617188f) + 4132.06640625f) * _458) + 2881.652099609375f) * _458) + 128.35911560058594f) * _458) + 1.0f);
   float _510 = ((((((((_459 * 2708.714111328125f) + 6801.15234375f) * _459) + 1079.54736328125f) * _459) + 1.1614649295806885f) * _459) + -4.139374868827872e-05f) / ((((((((_459 * 983.3893432617188f) + 4132.06640625f) * _459) + 2881.652099609375f) * _459) + 128.35911560058594f) * _459) + 1.0f);
-
-  float3 untonemapped = float3(_457, _458, _459);
-  float3 tonemapped_curve = renodx::color::srgb::DecodeSafe(float3(_508, _509, _510));  // using the fixed tonemapper that the game uses
-  // using upgradetonemap to allow for higher peak nits
-  float3 untonemapped_curve = renodx::tonemap::UpgradeToneMap(untonemapped, renodx::tonemap::renodrt::NeutralSDR(untonemapped), tonemapped_curve, RENODX_COLOR_GRADE_STRENGTH, 0.5f);
-
   float _535 = max(select((_508 <= 0.0392800010740757f), (_508 * 0.07739938050508499f), exp2(log2((_508 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)), 0.0f);
   float _536 = max(select((_509 <= 0.0392800010740757f), (_509 * 0.07739938050508499f), exp2(log2((_509 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)), 0.0f);
   float _537 = max(select((_510 <= 0.0392800010740757f), (_510 * 0.07739938050508499f), exp2(log2((_510 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)), 0.0f);
-
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    _535 = untonemapped_curve.r;
-    _536 = untonemapped_curve.g;
-    _537 = untonemapped_curve.b;
-  }
+  float3 untonemapped = float3(_457, _458, _459);
   
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    TonemapperFix(_535, _536, _537, untonemapped);
+  }
+
+  if (RENODX_FIX_CROSSFADE) {
+    CrossFadeFix(_535, _536, _537, cb0_009x, cb0_009z);
+  }
+
   float _540 = max(max(max(_535, _536), _537), 9.999999747378752e-06f);
   float _551 = select((abs(1.0f - _540) < 0.5249999761581421f), ((((5.809524059295654f - (_540 * 1.9047620296478271f)) * _540) + -0.42976200580596924f) * 0.25f), saturate(_540)) / _540;
   float _552 = _551 * _535;
@@ -204,25 +201,13 @@ void main(
   float _741 = select((_714 <= 0.0392800010740757f), (_714 * 0.07739938050508499f), exp2(log2((_714 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)) / _551;
   float _742 = select((_715 <= 0.0392800010740757f), (_715 * 0.07739938050508499f), exp2(log2((_715 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)) / _551;
   float _743 = select((_716 <= 0.0392800010740757f), (_716 * 0.07739938050508499f), exp2(log2((_716 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)) / _551;
-  float _755 = cb0_012x * 9.999999747378752e-05f;
-  float _765 = exp2(log2(_755 * mad(0.04331360012292862f, _743, mad(0.3292819857597351f, _742, (_741 * 0.627403974533081f)))) * 0.1593017578125f);
-  float _766 = exp2(log2(mad(0.012477199546992779f, _743, mad(0.9417769908905029f, _742, (_741 * 0.045745600014925f))) * _755) * 0.1593017578125f);
-  float _767 = exp2(log2(mad(0.9836069941520691f, _743, mad(0.017604099586606026f, _742, (_741 * -0.0012105499627068639f))) * _755) * 0.1593017578125f);
-
-  float3 VanillaColor = float3(exp2(log2(((_765 * 18.8515625f) + 0.8359375f) / ((_765 * 18.6875f) + 1.0f)) * 78.84375f), exp2(log2(((_766 * 18.8515625f) + 0.8359375f) / ((_766 * 18.6875f) + 1.0f)) * 78.84375f), exp2(log2(((_767 * 18.8515625f) + 0.8359375f) / ((_767 * 18.6875f) + 1.0f)) * 78.84375f));
+  //float _755 = cb0_012x * 9.999999747378752e-05f;
 
   float4 output;
   output.w = 1.f;
 
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    float3 color = float3(_741, _742, _743);
-    color = ApplyTonemap(color);
-    color = renodx::color::bt2020::from::BT709(color);
-    color = renodx::color::pq::EncodeSafe(color,RENODX_DIFFUSE_WHITE_NITS);
-    output.rgb = color;
-  } else {
-   output.rgb = VanillaColor;
-  }
+  output.rgb = float3(_741, _742, _743);
+  BT2020fromBT709andPQEncode(output.rgb, RENODX_DIFFUSE_WHITE_NITS, RENODX_FIX_COLOR);
 
   u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))] = output;
 }
