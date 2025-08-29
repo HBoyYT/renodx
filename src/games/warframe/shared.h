@@ -9,6 +9,8 @@ struct ShaderInjectData {
   float diffuse_white_nits;
   float graphics_white_nits;
   float gamma_correction;
+  float tone_map_per_channel;
+  float tone_map_chrominance_restoration;
   float tone_map_hue_correction;
 
   float tone_map_exposure;
@@ -29,33 +31,8 @@ struct ShaderInjectData {
 
   float swap_chain_custom_color_space;
 
-// float ui_color_fix;
-// float transition_fix;
-// float blowout_restoration_processor;
-//float blowout_restoration_strength;
-
-
-// float debug01;
-// float debug02;
-// float debug03;
-
-
-// float lut_strength_1;
-// float lut_scaling_1;
-// float lut_size_1;
-// float lut_tetrahedral_1;
-// float lut_recolor_1;
-// float lut_input_1;
-// float lut_output_1;
-
-// float lut_strength_2;
-// float lut_scaling_2;
-// float lut_size_2;
-// float lut_tetrahedral_2;
-// float lut_recolor_2;
-// float lut_input_2;
-// float lut_output_2;
-
+  float fix_color;
+  float fix_crossfade;
 };
 
 #ifndef __cplusplus
@@ -72,6 +49,8 @@ cbuffer shader_injection : register(b13) {
 #define RENODX_DIFFUSE_WHITE_NITS            shader_injection.diffuse_white_nits
 #define RENODX_GRAPHICS_WHITE_NITS           shader_injection.graphics_white_nits
 #define RENODX_GAMMA_CORRECTION              shader_injection.gamma_correction
+#define RENODX_TONE_MAP_PER_CHANNEL          shader_injection.tone_map_per_channel
+#define RENODX_TONE_MAP_CHROMINANCE_RESTORATION shader_injection.tone_map_chrominance_restoration
 #define RENODX_TONE_MAP_HUE_CORRECTION       shader_injection.tone_map_hue_correction
 
 #define RENODX_TONE_MAP_EXPOSURE             shader_injection.tone_map_exposure
@@ -86,13 +65,15 @@ cbuffer shader_injection : register(b13) {
 #define RENODX_COLOR_GRADE_LUT_STRENGTH      shader_injection.color_grade_lut_strength
 #define RENODX_LUT_SCALING				           shader_injection.lut_scaling
 
-
 #define RENODX_FX_VIGNETTE_STRENGTH          shader_injection.fx_vignette_strength
 #define RENODX_FX_CA_STRENGTH                shader_injection.fx_ca_strength
 #define RENODX_FX_DITHERING_STRENGTH         shader_injection.fx_dithering_strength
 #define RENODX_FX_ENABLE_UI                  shader_injection.fx_enable_ui
 
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE shader_injection.swap_chain_custom_color_space
+
+#define RENODX_FIX_CROSSFADE                 shader_injection.fix_crossfade
+#define RENODX_FIX_COLOR                     shader_injection.fix_color
 
 #include "../../shaders/renodx.hlsl"
 
