@@ -448,6 +448,7 @@ void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   
   settings[2]->default_value = peak.value();
   settings[3]->default_value = renodx::utils::swapchain::ComputeReferenceWhite(peak.value());
+  settings[4]->default_value = renodx::utils::swapchain::ComputeReferenceWhite(peak.value());
 }
 bool initialized = false;
 
