@@ -143,17 +143,22 @@ float3 ApplyTonemap(float3 color, bool isLUT, float3 untonemapped, bool per_chan
   tone_map_config.reno_drt_flare = 0.10f * pow(shader_injection.tone_map_flare, 10.f);
   tone_map_config.reno_drt_tone_map_method = 1u;  // Reinhard
 
-  tone_map_config.hue_correction_type = renodx::tonemap::renodrt::config::hue_correction_type::CUSTOM;
-  tone_map_config.reno_drt_hue_correction_method = 1u;  // ICtCp
-  // Do not want to hue correct SDR luts
-  tone_map_config.hue_correction_strength = !isLUT ? RENODX_TONE_MAP_HUE_CORRECTION : 0.f;
-  tone_map_config.hue_correction_color = WarframeHDRTonemapper(untonemapped, true);
-
+  tone_map_config.hue_correction_strength = 0.f;
   tone_map_config.reno_drt_working_color_space = 1u;
 
-  color = renodx::tonemap::config::Apply(color, tone_map_config);
+  float3 tonemapped_color = renodx::tonemap::config::Apply(color, tone_map_config);
 
-  return color;
+  // Chrominance correction (when tone mapping per channel)
+  if (tone_map_config.reno_drt_per_channel == true && shader_injection.tone_map_chrominance_restoration > 0.f) {
+    tone_map_config.reno_drt_per_channel = false;
+    float3 color_luminance = renodx::tonemap::config::Apply(color, tone_map_config);
+    tonemapped_color = renodx::color::correct::ChrominanceICtCp(tonemapped_color, color_luminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(color)) * shader_injection.tone_map_chrominance_restoration));
+  }
+
+  // Do not want to hue correct SDR luts
+  tonemapped_color = !isLUT ? renodx::color::correct::HueICtCp(tonemapped_color, WarframeHDRTonemapper(untonemapped, true), RENODX_TONE_MAP_HUE_CORRECTION) : tonemapped_color;
+
+  return tonemapped_color;
 }
 
 void TonemapperFix(inout float tonemapped_graded_r, inout float tonemapped_graded_g, inout float tonemapped_graded_b, float3 untonemapped) {
@@ -161,11 +166,6 @@ void TonemapperFix(inout float tonemapped_graded_r, inout float tonemapped_grade
   float3 tonemapped_graded = float3(tonemapped_graded_r, tonemapped_graded_g, tonemapped_graded_b);
   float3 untonemapped_graded = GetUntonemappedGraded(untonemapped, tonemapped_graded);
   tonemapped_graded = ApplyTonemap(untonemapped_graded, false, untonemapped);
-
-  if (shader_injection.tone_map_per_channel == 1.f && shader_injection.tone_map_chrominance_restoration > 0.f) {
-    float3 byLuminance = ApplyTonemap(untonemapped_graded, false, untonemapped, false);
-    tonemapped_graded = renodx::color::correct::ChrominanceICtCp(tonemapped_graded, byLuminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(untonemapped_graded)) * shader_injection.tone_map_chrominance_restoration));
-  }
 
   tonemapped_graded_r = tonemapped_graded.r;
   tonemapped_graded_g = tonemapped_graded.g;
