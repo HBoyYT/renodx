@@ -1,5 +1,5 @@
-#include "./shared.h"
-#include "./common.hlsl"
+#include "common.hlsl"
+#include "shared.h"
 
 Texture3D<float4> t0 : register(t0);
 
@@ -146,14 +146,29 @@ void main(
   float _205 = max(select((_178 <= 0.0392800010740757f), (_178 * 0.07739938050508499f), exp2(log2((_178 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)), 0.0f);
   float _206 = max(select((_179 <= 0.0392800010740757f), (_179 * 0.07739938050508499f), exp2(log2((_179 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)), 0.0f);
   float _207 = max(select((_180 <= 0.0392800010740757f), (_180 * 0.07739938050508499f), exp2(log2((_180 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)), 0.0f);
-  bool _210 = (cb0_037x > 0.0f);
 
+  float3 untonemapped = float3(_94, _95, _96);
+
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    TonemapperFix(_178, _179, _180, untonemapped);
+  }
+  
+  bool _210 = (cb0_037x > 0.0f);
   float4 _211 = t0.SampleLevel(s0, float3(_127, _128, _129), 0.0f);
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    _211.rgb = LUTFix(untonemapped, s0, t0, _210);
+  }
+
   float _215 = max(6.103519990574569e-05f, _211.x);
   float _216 = max(6.103519990574569e-05f, _211.y);
   float _217 = max(6.103519990574569e-05f, _211.z);
+
   bool _246 = (cb0_037y > 0.0f);
   float4 _247 = t1.SampleLevel(s1, float3(_127, _128, _129), 0.0f);
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    _247.rgb = LUTFix(untonemapped, s1, t1, _246);
+  }
+
   float _251 = max(6.103519990574569e-05f, _247.x);
   float _252 = max(6.103519990574569e-05f, _247.y);
   float _253 = max(6.103519990574569e-05f, _247.z);
@@ -191,6 +206,11 @@ void main(
   float _671 = ((_560 * (((cb0_033x + cb0_018x) + _460) + (((cb0_032x * cb0_017x) * _469) * exp2(log2(exp2(((cb0_030x * cb0_015x) * _487) * log2(max(0.0f, (((_380 * cb0_029x) * _493) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_031x * cb0_016x) * _478)))))) + (_451 * (((cb0_018x + cb0_023x) + _323) + (((cb0_017x * cb0_022x) * _337) * exp2(log2(exp2(((cb0_015x * cb0_020x) * _365) * log2(max(0.0f, (((_380 * cb0_019x) * _376) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_016x * cb0_021x) * _351))))))) + ((((cb0_028x + cb0_018x) + _569) + (((cb0_027x * cb0_017x) * _578) * exp2(log2(exp2(((cb0_025x * cb0_015x) * _596) * log2(max(0.0f, (((_380 * cb0_024x) * _602) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_026x * cb0_016x) * _587))))) * _660);
   float _673 = ((_560 * (((cb0_033y + cb0_018y) + _460) + (((cb0_032y * cb0_017y) * _469) * exp2(log2(exp2(((cb0_030y * cb0_015y) * _487) * log2(max(0.0f, (((_383 * cb0_029y) * _493) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_031y * cb0_016y) * _478)))))) + (_451 * (((cb0_018y + cb0_023y) + _323) + (((cb0_017y * cb0_022y) * _337) * exp2(log2(exp2(((cb0_015y * cb0_020y) * _365) * log2(max(0.0f, (((_383 * cb0_019y) * _376) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_016y * cb0_021y) * _351))))))) + ((((cb0_028y + cb0_018y) + _569) + (((cb0_027y * cb0_017y) * _578) * exp2(log2(exp2(((cb0_025y * cb0_015y) * _596) * log2(max(0.0f, (((_383 * cb0_024y) * _602) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_026y * cb0_016y) * _587))))) * _660);
   float _675 = ((_560 * (((cb0_033z + cb0_018z) + _460) + (((cb0_032z * cb0_017z) * _469) * exp2(log2(exp2(((cb0_030z * cb0_015z) * _487) * log2(max(0.0f, (((_386 * cb0_029z) * _493) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_031z * cb0_016z) * _478)))))) + (_451 * (((cb0_018z + cb0_023z) + _323) + (((cb0_017z * cb0_022z) * _337) * exp2(log2(exp2(((cb0_015z * cb0_020z) * _365) * log2(max(0.0f, (((_386 * cb0_019z) * _376) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_016z * cb0_021z) * _351))))))) + ((((cb0_028z + cb0_018z) + _569) + (((cb0_027z * cb0_017z) * _578) * exp2(log2(exp2(((cb0_025z * cb0_015z) * _596) * log2(max(0.0f, (((_386 * cb0_024z) * _602) + _309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_026z * cb0_016z) * _587))))) * _660);
+
+  if (RENODX_FIX_CROSSFADE) {
+    CrossFadeFix(_671, _673, _675, cb0_009x, cb0_009z);
+  }
+  
   float _678 = max(max(max(_671, _673), _675), 9.999999747378752e-06f);
   float _689 = select((abs(1.0f - _678) < 0.5249999761581421f), ((((5.809524059295654f - (_678 * 1.9047620296478271f)) * _678) + -0.42976200580596924f) * 0.25f), saturate(_678)) / _678;
   float _690 = _689 * _671;
@@ -218,137 +238,19 @@ void main(
   float _806 = (((_780 * 0.8011090159416199f) - (_775 * 0.3959130048751831f)) * _752) + (_785 * (1.0f - _752));
   float _819 = ((((_799 * 0.13050441443920135f) + _768) - (_792 * 0.08094444870948792f)) - (_806 * 0.11672106385231018f)) * 0.699999988079071f;
   float _839 = 1.0f - _754;
-
-  float4 untonemapped_211 = (float4(_127, _128, _129, 1.f));
-  float untonemapped_215 = max(6.103519990574569e-05f, untonemapped_211.x);
-  float untonemapped_216 = max(6.103519990574569e-05f, untonemapped_211.y);
-  float untonemapped_217 = max(6.103519990574569e-05f, untonemapped_211.z);
-  bool untonemapped_246 = (cb0_037y > 0.0f);
-  float4 untonemapped_247 = renodx::color::srgb::EncodeSafe(float4(_127, _128, _129, 1.f));;
-  float untonemapped_251 = max(6.103519990574569e-05f, untonemapped_247.x);
-  float untonemapped_252 = max(6.103519990574569e-05f, untonemapped_247.y);
-  float untonemapped_253 = max(6.103519990574569e-05f, untonemapped_247.z);
-  float untonemapped_285 = (select(_210, select((untonemapped_215 > 0.08100000023841858f), exp2(log2((untonemapped_215 + 0.0989999994635582f) * 0.9099181294441223f) * 2.222222328186035f), (untonemapped_215 * 0.2222222238779068f)), _205) - _205) * cb0_037z;
-  float untonemapped_286 = (select(_210, select((untonemapped_216 > 0.08100000023841858f), exp2(log2((untonemapped_216 + 0.0989999994635582f) * 0.9099181294441223f) * 2.222222328186035f), (untonemapped_216 * 0.2222222238779068f)), _206) - _206) * cb0_037z;
-  float untonemapped_287 = (select(_210, select((untonemapped_217 > 0.08100000023841858f), exp2(log2((untonemapped_217 + 0.0989999994635582f) * 0.9099181294441223f) * 2.222222328186035f), (untonemapped_217 * 0.2222222238779068f)), _207) - _207) * cb0_037z;
-  float untonemapped_306 = (untonemapped_285 + _205) + ((((select(untonemapped_246, select((untonemapped_251 > 0.08100000023841858f), exp2(log2((untonemapped_251 + 0.0989999994635582f) * 0.9099181294441223f) * 2.222222328186035f), (untonemapped_251 * 0.2222222238779068f)), _205) - _205) * cb0_037w) - untonemapped_285) * cb0_036x);
-  float untonemapped_307 = (untonemapped_286 + _206) + ((((select(untonemapped_246, select((untonemapped_252 > 0.08100000023841858f), exp2(log2((untonemapped_252 + 0.0989999994635582f) * 0.9099181294441223f) * 2.222222328186035f), (untonemapped_252 * 0.2222222238779068f)), _206) - _206) * cb0_037w) - untonemapped_286) * cb0_036x);
-  float untonemapped_308 = (untonemapped_287 + _207) + ((((select(untonemapped_246, select((untonemapped_253 > 0.08100000023841858f), exp2(log2((untonemapped_253 + 0.0989999994635582f) * 0.9099181294441223f) * 2.222222328186035f), (untonemapped_253 * 0.2222222238779068f)), _207) - _207) * cb0_037w) - untonemapped_287) * cb0_036x);
-  float untonemapped_309 = dot(float3(untonemapped_306, untonemapped_307, untonemapped_308), float3(0.2125999927520752f, 0.7152000069618225f, 0.0722000002861023f));
-  float untonemapped_323 = cb0_018w + cb0_023w;
-  float untonemapped_337 = cb0_017w * cb0_022w;
-  float untonemapped_351 = cb0_016w * cb0_021w;
-  float untonemapped_365 = cb0_015w * cb0_020w;
-  float untonemapped_376 = cb0_014w * cb0_019w;
-  float untonemapped_380 = cb0_014x * (untonemapped_306 - untonemapped_309);
-  float untonemapped_383 = cb0_014y * (untonemapped_307 - untonemapped_309);
-  float untonemapped_386 = cb0_014z * (untonemapped_308 - untonemapped_309);
-  float untonemapped_446 = saturate((untonemapped_309 - cb0_034x) / (cb0_034y - cb0_034x));
-  float untonemapped_450 = (untonemapped_446 * untonemapped_446) * (3.0f - (untonemapped_446 * 2.0f));
-  float untonemapped_451 = 1.0f - untonemapped_450;
-  float untonemapped_460 = cb0_033w + cb0_018w;
-  float untonemapped_469 = cb0_032w * cb0_017w;
-  float untonemapped_478 = cb0_031w * cb0_016w;
-  float untonemapped_487 = cb0_030w * cb0_015w;
-  float untonemapped_493 = cb0_029w * cb0_014w;
-  float untonemapped_556 = saturate((untonemapped_309 - cb0_034z) / (cb0_034w - cb0_034z));
-  float untonemapped_560 = (untonemapped_556 * untonemapped_556) * (3.0f - (untonemapped_556 * 2.0f));
-  float untonemapped_569 = cb0_028w + cb0_018w;
-  float untonemapped_578 = cb0_027w * cb0_017w;
-  float untonemapped_587 = cb0_026w * cb0_016w;
-  float untonemapped_596 = cb0_025w * cb0_015w;
-  float untonemapped_602 = cb0_024w * cb0_014w;
-  float untonemapped_660 = untonemapped_450 - untonemapped_560;
-  float untonemapped_671 = ((untonemapped_560 * (((cb0_033x + cb0_018x) + untonemapped_460) + (((cb0_032x * cb0_017x) * untonemapped_469) * exp2(log2(exp2(((cb0_030x * cb0_015x) * untonemapped_487) * log2(max(0.0f, (((untonemapped_380 * cb0_029x) * untonemapped_493) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_031x * cb0_016x) * untonemapped_478)))))) + (untonemapped_451 * (((cb0_018x + cb0_023x) + untonemapped_323) + (((cb0_017x * cb0_022x) * untonemapped_337) * exp2(log2(exp2(((cb0_015x * cb0_020x) * untonemapped_365) * log2(max(0.0f, (((untonemapped_380 * cb0_019x) * untonemapped_376) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_016x * cb0_021x) * untonemapped_351))))))) + ((((cb0_028x + cb0_018x) + untonemapped_569) + (((cb0_027x * cb0_017x) * untonemapped_578) * exp2(log2(exp2(((cb0_025x * cb0_015x) * untonemapped_596) * log2(max(0.0f, (((untonemapped_380 * cb0_024x) * untonemapped_602) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_026x * cb0_016x) * untonemapped_587))))) * untonemapped_660);
-  float untonemapped_673 = ((untonemapped_560 * (((cb0_033y + cb0_018y) + untonemapped_460) + (((cb0_032y * cb0_017y) * untonemapped_469) * exp2(log2(exp2(((cb0_030y * cb0_015y) * untonemapped_487) * log2(max(0.0f, (((untonemapped_383 * cb0_029y) * untonemapped_493) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_031y * cb0_016y) * untonemapped_478)))))) + (untonemapped_451 * (((cb0_018y + cb0_023y) + untonemapped_323) + (((cb0_017y * cb0_022y) * untonemapped_337) * exp2(log2(exp2(((cb0_015y * cb0_020y) * untonemapped_365) * log2(max(0.0f, (((untonemapped_383 * cb0_019y) * untonemapped_376) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_016y * cb0_021y) * untonemapped_351))))))) + ((((cb0_028y + cb0_018y) + untonemapped_569) + (((cb0_027y * cb0_017y) * untonemapped_578) * exp2(log2(exp2(((cb0_025y * cb0_015y) * untonemapped_596) * log2(max(0.0f, (((untonemapped_383 * cb0_024y) * untonemapped_602) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_026y * cb0_016y) * untonemapped_587))))) * untonemapped_660);
-  float untonemapped_675 = ((untonemapped_560 * (((cb0_033z + cb0_018z) + untonemapped_460) + (((cb0_032z * cb0_017z) * untonemapped_469) * exp2(log2(exp2(((cb0_030z * cb0_015z) * untonemapped_487) * log2(max(0.0f, (((untonemapped_386 * cb0_029z) * untonemapped_493) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_031z * cb0_016z) * untonemapped_478)))))) + (untonemapped_451 * (((cb0_018z + cb0_023z) + untonemapped_323) + (((cb0_017z * cb0_022z) * untonemapped_337) * exp2(log2(exp2(((cb0_015z * cb0_020z) * untonemapped_365) * log2(max(0.0f, (((untonemapped_386 * cb0_019z) * untonemapped_376) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_016z * cb0_021z) * untonemapped_351))))))) + ((((cb0_028z + cb0_018z) + untonemapped_569) + (((cb0_027z * cb0_017z) * untonemapped_578) * exp2(log2(exp2(((cb0_025z * cb0_015z) * untonemapped_596) * log2(max(0.0f, (((untonemapped_386 * cb0_024z) * untonemapped_602) + untonemapped_309)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_026z * cb0_016z) * untonemapped_587))))) * untonemapped_660);
-  float untonemapped_678 = max(max(max(untonemapped_671, untonemapped_673), untonemapped_675), 9.999999747378752e-06f);
-  float untonemapped_689 = select((abs(1.0f - untonemapped_678) < 0.5249999761581421f), ((((5.809524059295654f - (untonemapped_678 * 1.9047620296478271f)) * untonemapped_678) + -0.42976200580596924f) * 0.25f), saturate(untonemapped_678)) / untonemapped_678;
-  float untonemapped_690 = untonemapped_689 * untonemapped_671;
-  float untonemapped_691 = untonemapped_689 * untonemapped_673;
-  float untonemapped_692 = untonemapped_689 * untonemapped_675;
-
-  //float cb0_009z = 0.3f;
-  float untonemapped_736 = 0.5f - cb0_009z;
-
-  //float cb0_009x = 2.f;
-
-  float untonemapped_740 = (untonemapped_736 + ((exp2(log2(select((untonemapped_690 <= 0.0031308000907301903f), (untonemapped_690 * 12.920000076293945f), (((pow(untonemapped_690, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f))) * cb0_009x) + -0.5f) * cb0_009y));
-  float untonemapped_741 = (untonemapped_736 + ((exp2(log2(select((untonemapped_691 <= 0.0031308000907301903f), (untonemapped_691 * 12.920000076293945f), (((pow(untonemapped_691, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f))) * cb0_009x) + -0.5f) * cb0_009y));
-  float untonemapped_742 = (untonemapped_736 + ((exp2(log2(select((untonemapped_692 <= 0.0031308000907301903f), (untonemapped_692 * 12.920000076293945f), (((pow(untonemapped_692, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f))) * cb0_009x) + -0.5f) * cb0_009y));
-  int untonemapped_746 = int(cb0_013x);
-  float untonemapped_748 = select((untonemapped_746 == 1), 1.0f, 0.0f);
-  float untonemapped_750 = select((untonemapped_746 == 2), 1.0f, 0.0f);
-  float untonemapped_752 = select((untonemapped_746 == 3), 1.0f, 0.0f);
-  float untonemapped_754 = select((untonemapped_746 == 0), 0.0f, 0.8999999761581421f);
-  float untonemapped_761 = (untonemapped_754 * 0.1120000034570694f) + 1.0f;
-  float untonemapped_767 = (select((untonemapped_754 > 0.0f), 0.10999999940395355f, 0.0f) - (untonemapped_754 * 0.07500000298023224f)) + 0.5f;
-  float untonemapped_768 = untonemapped_767 + (untonemapped_761 * (untonemapped_740 + -0.5f));
-  float untonemapped_769 = untonemapped_767 + (untonemapped_761 * (untonemapped_741 + -0.5f));
-  float untonemapped_770 = untonemapped_767 + (untonemapped_761 * (untonemapped_742 + -0.5f));
-  float untonemapped_775 = ((untonemapped_768 * 17.882400512695312f) + (untonemapped_769 * 43.5161018371582f)) + (untonemapped_770 * 4.119349956512451f);
-  float untonemapped_780 = ((untonemapped_768 * 3.4556500911712646f) + (untonemapped_769 * 27.155399322509766f)) + (untonemapped_770 * 3.867140054702759f);
-  float untonemapped_785 = ((untonemapped_768 * 0.029956599697470665f) + (untonemapped_769 * 0.1843090057373047f)) + (untonemapped_770 * 1.4670900106430054f);
-  float untonemapped_792 = (((untonemapped_780 * 2.023439884185791f) - (untonemapped_785 * 2.52810001373291f)) * untonemapped_748) + (untonemapped_775 * (1.0f - untonemapped_748));
-  float untonemapped_799 = (((untonemapped_775 * 0.4942069947719574f) + (untonemapped_785 * 1.248270034790039f)) * untonemapped_750) + (untonemapped_780 * (1.0f - untonemapped_750));
-  float untonemapped_806 = (((untonemapped_780 * 0.8011090159416199f) - (untonemapped_775 * 0.3959130048751831f)) * untonemapped_752) + (untonemapped_785 * (1.0f - untonemapped_752));
-  float untonemapped_819 = ((((untonemapped_799 * 0.13050441443920135f) + untonemapped_768) - (untonemapped_792 * 0.08094444870948792f)) - (untonemapped_806 * 0.11672106385231018f)) * 0.699999988079071f;
-  float untonemapped_839 = 1.0f - untonemapped_754;
-  float untonemapped_852 = ((((min(max(untonemapped_768, 0.0f), 1.0f) * untonemapped_754) - untonemapped_740) + (untonemapped_768 * untonemapped_839)) * cb0_013y) + untonemapped_740;
-  float untonemapped_853 = ((((min(max((((((untonemapped_769 * 2.0f) - (untonemapped_799 * 0.05401932820677757f)) + (untonemapped_792 * 0.010248533450067043f)) + (untonemapped_806 * 0.11361470818519592f)) + untonemapped_819), 0.0f), 1.0f) * untonemapped_754) - untonemapped_741) + (untonemapped_769 * untonemapped_839)) * cb0_013y) + untonemapped_741;
-  float untonemapped_854 = ((((min(max((((((untonemapped_792 * 0.0003652969317045063f) + (untonemapped_770 * 2.0f)) + (untonemapped_799 * 0.004121614620089531f)) - (untonemapped_806 * 0.693511426448822f)) + untonemapped_819), 0.0f), 1.0f) * untonemapped_754) - untonemapped_742) + (untonemapped_770 * untonemapped_839)) * cb0_013y) + untonemapped_742;
-
   float _852 = ((((min(max(_768, 0.0f), 1.0f) * _754) - _740) + (_768 * _839)) * cb0_013y) + _740;
   float _853 = ((((min(max((((((_769 * 2.0f) - (_799 * 0.05401932820677757f)) + (_792 * 0.010248533450067043f)) + (_806 * 0.11361470818519592f)) + _819), 0.0f), 1.0f) * _754) - _741) + (_769 * _839)) * cb0_013y) + _741;
   float _854 = ((((min(max((((((_792 * 0.0003652969317045063f) + (_770 * 2.0f)) + (_799 * 0.004121614620089531f)) - (_806 * 0.693511426448822f)) + _819), 0.0f), 1.0f) * _754) - _742) + (_770 * _839)) * cb0_013y) + _742;
   float _879 = select((_852 <= 0.0392800010740757f), (_852 * 0.07739938050508499f), exp2(log2((_852 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)) / _689;
   float _880 = select((_853 <= 0.0392800010740757f), (_853 * 0.07739938050508499f), exp2(log2((_853 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)) / _689;
   float _881 = select((_854 <= 0.0392800010740757f), (_854 * 0.07739938050508499f), exp2(log2((_854 + 0.054999999701976776f) * 0.9478673338890076f) * 2.4000000953674316f)) / _689;
-  //float _893 = cb0_012x * 9.999999747378752e-05f;
-  float _893 = RENODX_DIFFUSE_WHITE_NITS * 9.999999747378752e-05f;
-  float _903 = exp2(log2(_893 * mad(0.04331360012292862f, _881, mad(0.3292819857597351f, _880, (_879 * 0.627403974533081f)))) * 0.1593017578125f);
-  float _904 = exp2(log2(mad(0.012477199546992779f, _881, mad(0.9417769908905029f, _880, (_879 * 0.045745600014925f))) * _893) * 0.1593017578125f);
-  float _905 = exp2(log2(mad(0.9836069941520691f, _881, mad(0.017604099586606026f, _880, (_879 * -0.0012105499627068639f))) * _893) * 0.1593017578125f);
+  // float _893 = cb0_012x * 9.999999747378752e-05f;
 
-  float3 vanillaColor = float3(exp2(log2(((_903 * 18.8515625f) + 0.8359375f) / ((_903 * 18.6875f) + 1.0f)) * 78.84375f), exp2(log2(((_904 * 18.8515625f) + 0.8359375f) / ((_904 * 18.6875f) + 1.0f)) * 78.84375f), exp2(log2(((_905 * 18.8515625f) + 0.8359375f) / ((_905 * 18.6875f) + 1.0f)) * 78.84375f));
-  vanillaColor = renodx::color::srgb::DecodeSafe(vanillaColor);
+  float4 output;
+  output.w = 1.f;
 
-  float3 untonemapped = renodx::color::srgb::DecodeSafe(float3(untonemapped_852, untonemapped_853, untonemapped_854));
-  untonemapped = renodx::color::bt2020::from::BT709(untonemapped);
+  output.rgb = float3(_879, _880, _881);
+  BT2020fromBT709andPQEncode(output.rgb, RENODX_DIFFUSE_WHITE_NITS, RENODX_FIX_COLOR);
 
-  float3 tonemapped = renodx::color::bt2020::from::BT709(float3(_852, _853, _854));
-  tonemapped = renodx::color::srgb::DecodeSafe(tonemapped);
-  tonemapped = renodx::color::pq::EncodeSafe(tonemapped, RENODX_DIFFUSE_WHITE_NITS);
-  tonemapped = renodx::color::srgb::DecodeSafe(tonemapped);
-
-  // Fade to black fix
-  if (cb0_009z > 0.f) {  // If its positive (fade to black)
-    if (cb0_009z > 0.055f) {
-      untonemapped = saturate(tonemapped);  // When its more dark, its just tonmapped
-    } else if (cb0_009z < 0.055f) {         // As It fades from black back to normal
-      // Applies a curve to fade between untonemapped and tonemapped for a smoother transition
-      float fade = pow((1 - (cb0_009z)), 15);
-      untonemapped = lerp(saturate(tonemapped), untonemapped, fade);
-    }
-  }
-
-  renodx::draw::Config config = renodx::draw::BuildConfig();
-  config.per_channel_blowout_restoration = 0.f;
-  config.per_channel_chrominance_correction = 0.f;
-  config.per_channel_hue_correction = 0.f;
-
-
-  float3 untonemapped_graded = renodx::draw::ToneMapPass(untonemapped, tonemapped, config);
-
-  float4 outputColor;
-  outputColor.w = 1.f;
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    outputColor.rgb = (untonemapped_graded);
-  } else {
-    outputColor.rgb = vanillaColor;
-  }
-
-  outputColor.rgb = renodx::color::srgb::EncodeSafe(outputColor.rgb);
-
-  u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))] = outputColor;
+  u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))] = output;
 }
