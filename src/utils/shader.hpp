@@ -924,13 +924,20 @@ static void OnInitPipeline(
       std::stringstream s;
       s << "utils::shader::OnInitPipeline(Reinserted pipeline: ";
       s << PRINT_PTR(pipeline.handle);
-      s << ", Device: " << reinterpret_cast<uintptr_t>(device);
+      s << ", Device: " << PRINT_PTR(reinterpret_cast<uintptr_t>(device));
       s << ", Layout: " << PRINT_PTR(layout.handle);
       s << ", Subobjects: " << pair->second.subobjects.size() << " => " << subobject_count;
       s << ", Shader hashes: " << pair->second.shader_hashes.size() << " => " << details.shader_hashes.size();
       s << ")";
       reshade::log::message(reshade::log::level::warning, s.str().c_str());
-      renodx::utils::pipeline::DestroyPipelineSubobjects(details.subobjects);
+      if (pair->second.replacement_pipeline.handle != 0u) {
+        device->destroy_pipeline(pair->second.replacement_pipeline);
+      }
+      if (store->use_replace_async || store->use_shader_cache) {
+        // Retain subobjects for async replacement or shader cache
+      } else {
+        renodx::utils::pipeline::DestroyPipelineSubobjects(pair->second.subobjects);
+      }
     }
     if (store->use_replace_async) {
       for (const auto shader_hash : pair->second.shader_hashes) {
