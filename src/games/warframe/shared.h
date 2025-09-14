@@ -27,6 +27,8 @@ struct ShaderInjectData {
   float fx_vignette_strength;
   float fx_ca_strength;
   float fx_dithering_strength;
+  float fx_sharpening_type;
+  float fx_sharpening_strength;
   float fx_enable_ui;
 
   float swap_chain_custom_color_space;
@@ -68,6 +70,8 @@ cbuffer shader_injection : register(b13) {
 #define RENODX_FX_VIGNETTE_STRENGTH          shader_injection.fx_vignette_strength
 #define RENODX_FX_CA_STRENGTH                shader_injection.fx_ca_strength
 #define RENODX_FX_DITHERING_STRENGTH         shader_injection.fx_dithering_strength
+#define RENODX_FX_SHARPENING_TYPE            shader_injection.fx_sharpening_type
+#define RENODX_FX_SHARPENNING_STRENGTH       shader_injection.fx_sharpening_strength
 #define RENODX_FX_ENABLE_UI                  shader_injection.fx_enable_ui
 
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE shader_injection.swap_chain_custom_color_space

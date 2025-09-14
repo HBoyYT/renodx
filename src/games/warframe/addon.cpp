@@ -249,6 +249,17 @@
         .parse = [](float value) { return value * 0.02f; },
         .is_visible = []() { return current_settings_mode >= 1; },
     },
+     new renodx::utils::settings::Setting{
+        .key = "FxSharpeningStrength",
+        .binding = &shader_injection.fx_sharpening_strength,
+        .default_value = 50.f,
+        .label = "Sharpening Strength",
+        .section = "Effects",
+        .tooltip = "Controls how much sharpening to apply to the image",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
        new renodx::utils::settings::Setting{
         .key = "FxCAStrength",
         .binding = &shader_injection.fx_ca_strength,
@@ -266,9 +277,23 @@
         .default_value = 100.f,
         .label = "Dithering Strength",
         .section = "Effects",
-        .tooltip = "Controls how much dithering to apply to the image",
+        .tooltip = "Controls how much dithering to apply to the image"
+                    "\nReccomended to leave at defualt value."
+                    "\nDefault: 100",
         .max = 100.f,
         .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
+         new renodx::utils::settings::Setting{
+        .key = "fxSharpeningType",
+        .binding = &shader_injection.fx_sharpening_type,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "Sharpening Type",
+        .section = "Effects",
+        .tooltip = "Selects sharpening filter."
+                   "\nDefault: Vanilla",
+        .labels = {"Vanilla", "RCAS"},
         .is_visible = []() { return current_settings_mode >= 2; },
     },
         new renodx::utils::settings::Setting{
@@ -278,7 +303,7 @@
         .default_value = 1.f,
         .label = "Enable UI",
         .section = "Effects",
-        .tooltip = "\nDefault: On",
+        .tooltip = "Usefull for taking screenshots.",
         .labels = {"Off", "On"},
         .is_visible = []() { return current_settings_mode >= 1; },
     },
@@ -332,9 +357,10 @@
         .label = "- This mod only works using DirectX 12, you can change this in the Warframe launcher."
                  "\n- Enable 'HDR Output' in the game's settings. The HDR paper white slider shouldn't do anything, you can just set it to what you have in RenoDX."
                  "\n- Enable 'Bloom' and 'Distortions' in the game's settings"
-                 "\n\nPlease note, settings require a 'scene chaange' for them to apply. Examples of 'scene changes' include:"
+                 "\n- Set 'Sharpening' to 100. (This will not control the sharpening ammount, use the slider in RenoDX instead)."
+                 "\n\nPlease note, settings require a 'scene change' to apply them. Examples of 'scene changes' include:"
                  "\n    -Aim gliding (non-protoframe skin)"
-                 "\n    -Teleporting to places (in a hub / base of operations)",
+                 "\n    -Fast traveling to places in a hub / base of operations",
         .section = "Instructions",
     },
         new renodx::utils::settings::Setting{
@@ -406,7 +432,7 @@
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = std::string("Build: ") + renodx::utils::date::ISO_DATE_TIME,
         .section = "About",
-    },
+    }
  };
  
  void OnPresetOff() {
@@ -427,11 +453,11 @@
    renodx::utils::settings::UpdateSetting("ColorGradeScene", 100.f);
    renodx::utils::settings::UpdateSetting("LUTScaling", 0.f);
    renodx::utils::settings::UpdateSetting("FxVignetteStrength", 50.f);
+   renodx::utils::settings::UpdateSetting("fxSharpeningType", 0.f);
    renodx::utils::settings::UpdateSetting("FxCAStrength", 50.f);
    renodx::utils::settings::UpdateSetting("FxDitheringStrength", 100.f);
    renodx::utils::settings::UpdateSetting("SwapChainCustomColorSpace", 0.f);
    renodx::utils::settings::UpdateSetting("ColorFix", 0.f);
-   renodx::utils::settings::UpdateSetting("UIColorFix", 0.f);
    renodx::utils::settings::UpdateSetting("TransitionFix", 0.f);
  }
  
