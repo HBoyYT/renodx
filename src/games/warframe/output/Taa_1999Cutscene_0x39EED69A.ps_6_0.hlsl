@@ -266,7 +266,7 @@ float4 main(
   // SV_Target.y = _729;
   // SV_Target.z = _730;
 
-  SV_Target.rgb = BlendUI(_572, float3(_550, _551, _552));
+  SV_Target.rgb = BlendUI(_572, float3(_569, _570, _571));
   SV_Target.w = _494;
   return SV_Target;
 }
