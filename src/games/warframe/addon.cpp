@@ -7,8 +7,10 @@
 
  #define DEBUG_LEVEL_0
 
+
  #include <deps/imgui/imgui.h>
  #include <include/reshade.hpp>
+ #include <random>
 
  #include <embed/shaders.h>
  
@@ -112,7 +114,7 @@
         .tooltip = "Restores highlight saturation due to per channel grading.",
         .min = 0.f,
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_per_channel >= 1; },
+        .is_enabled = []() { return shader_injection.tone_map_type >= 3; },
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return shader_injection.tone_map_per_channel >= 1 && current_settings_mode >= 2; },
     },
@@ -235,6 +237,7 @@
         .section = "Effects",
         .tooltip = "Scales the color grade LUT to full range when size is clamped.",
         .max = 100.f,
+        .is_enabled = []() { return shader_injection.tone_map_type > 0; },
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 1; },
     },
@@ -272,6 +275,18 @@
         .is_visible = []() { return current_settings_mode >= 1; },
     },
        new renodx::utils::settings::Setting{
+        .key = "FxFilmGrainStrength",
+        .binding = &shader_injection.fx_film_grain_strength,
+        .default_value = 50.f,
+        .label = "Film Grain Strength",
+        .section = "Effects",
+        .tooltip = "Controls the strength of the film grain"
+                    "\nDefault: 50",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return current_settings_mode >= 2 && shader_injection.fx_film_grain_type == 1; },
+    },
+       new renodx::utils::settings::Setting{
         .key = "FxDitheringStrength",
         .binding = &shader_injection.fx_dithering_strength,
         .default_value = 100.f,
@@ -294,6 +309,18 @@
         .tooltip = "Selects sharpening filter."
                    "\nDefault: Vanilla",
         .labels = {"Vanilla", "RCAS"},
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
+         new renodx::utils::settings::Setting{
+        .key = "fxFilmGrainType",
+        .binding = &shader_injection.fx_film_grain_type,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "Film Grain Type",
+        .section = "Effects",
+        .tooltip = "Selects film grain type."
+                   "\nDefault: Vanilla",
+        .labels = {"Vanilla", "RenoDX"},
         .is_visible = []() { return current_settings_mode >= 2; },
     },
         new renodx::utils::settings::Setting{
@@ -357,10 +384,20 @@
         .label = "- This mod only works using DirectX 12, you can change this in the Warframe launcher."
                  "\n- Enable 'HDR Output' in the game's settings. The HDR paper white slider shouldn't do anything, you can just set it to what you have in RenoDX."
                  "\n- Enable 'Bloom' and 'Distortions' in the game's settings"
-                 "\n- Set 'Sharpening' to 100. (This will not control the sharpening ammount, use the slider in RenoDX instead)."
-                 "\n\nPlease note, settings require a 'scene change' to apply them. Examples of 'scene changes' include:"
+                 "\n- Set 'Sharpening' to 100. (This will not control the sharpening ammount, use the slider in RenoDX instead).",
+        .section = "Instructions",
+    },
+     new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = "\nPlease note, settings require a 'scene change' to apply them. Examples of 'scene changes' include:"
                  "\n    -Aim gliding (non-protoframe skin)"
                  "\n    -Fast traveling to places in a hub / base of operations",
+        .section = "Instructions",
+        .tint = 0xFFFF00,
+    },
+        new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = "\n Credits to Lilium for their RCAS shader.",
         .section = "Instructions",
     },
         new renodx::utils::settings::Setting{
@@ -456,6 +493,7 @@
    renodx::utils::settings::UpdateSetting("fxSharpeningType", 0.f);
    renodx::utils::settings::UpdateSetting("FxCAStrength", 50.f);
    renodx::utils::settings::UpdateSetting("FxDitheringStrength", 100.f);
+   renodx::utils::settings::UpdateSetting("FxFilmGrainStrength", 50.f);
    renodx::utils::settings::UpdateSetting("SwapChainCustomColorSpace", 0.f);
    renodx::utils::settings::UpdateSetting("ColorFix", 0.f);
    renodx::utils::settings::UpdateSetting("TransitionFix", 0.f);
@@ -476,6 +514,19 @@ void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   settings[3]->default_value = renodx::utils::swapchain::ComputeReferenceWhite(peak.value());
   settings[4]->default_value = renodx::utils::swapchain::ComputeReferenceWhite(peak.value());
 }
+
+void OnPresent(
+    reshade::api::command_queue* queue,
+    reshade::api::swapchain* swapchain,
+    const reshade::api::rect* source_rect,
+    const reshade::api::rect* dest_rect,
+    uint32_t dirty_rect_count,
+    const reshade::api::rect* dirty_rects) {
+  static std::mt19937 random_generator(std::chrono::system_clock::now().time_since_epoch().count());
+  static auto random_range = static_cast<float>(std::mt19937::max() - std::mt19937::min());
+  RENODX_FX_RANDOM = static_cast<float>(random_generator() + std::mt19937::min()) / random_range;
+}
+
 bool initialized = false;
 
 }  // namespace
@@ -497,10 +548,12 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       }
 
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);  // peak nits detection
+      reshade::register_event<reshade::addon_event::present>(OnPresent);               // Random for film grain
       break;
     case DLL_PROCESS_DETACH:
-      reshade::unregister_addon(h_module);
       reshade::unregister_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);  // peak nits detection
+      reshade::unregister_event<reshade::addon_event::present>(OnPresent);               // Random for film grain
+      reshade::unregister_addon(h_module);
       break;
   }
 
