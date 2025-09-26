@@ -111,8 +111,10 @@ float3 GetUntonemappedGraded(float3 untonemapped, float3 tonemapped_graded) {
   float3 untonemapped_graded;
 
   if (RENODX_TONE_MAP_TYPE == 3.f) {  // Modified Warframe tonemapper
-    float blend = smoothstep(1, 1.2, renodx::color::y::from::BT709(tonemapped_graded));
-    untonemapped_graded = lerp(tonemapped_graded, untonemapped * 1.83899937044f, blend);
+    // float blend = smoothstep(1, 1.2, renodx::color::y::from::BT709(tonemapped_graded));
+    // untonemapped_graded = lerp(tonemapped_graded, untonemapped * 1.83899937044f, blend);
+
+    untonemapped_graded = select(untonemapped >= 0.46194799166660605, 2.0044507284183912f * untonemapped, tonemapped_graded);
   }
 
   untonemapped_graded = lerp(untonemapped, untonemapped_graded, RENODX_COLOR_GRADE_STRENGTH);
@@ -152,7 +154,11 @@ float3 ApplyTonemap(float3 color, bool isLUT, float3 untonemapped, bool per_chan
   if (tone_map_config.reno_drt_per_channel == true && shader_injection.tone_map_chrominance_restoration > 0.f) {
     tone_map_config.reno_drt_per_channel = false;
     float3 color_luminance = renodx::tonemap::config::Apply(color, tone_map_config);
-    tonemapped_color = renodx::color::correct::ChrominanceICtCp(tonemapped_color, color_luminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(color)) * shader_injection.tone_map_chrominance_restoration));
+
+    // If by luminance color's chrominance is greater than per channel's chrominance
+    if (length(renodx::color::oklab::from::BT709(color_luminance).yz) > length(renodx::color::oklab::from::BT709(tonemapped_color).yz)) {
+      tonemapped_color = renodx::color::correct::ChrominanceOKLab(tonemapped_color, color_luminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(color)) * shader_injection.tone_map_chrominance_restoration));
+    }
   }
 
   // Do not want to hue correct SDR luts
@@ -182,9 +188,9 @@ float3 LUTFix(float3 untonemapped, SamplerState sampler, Texture3D texture, bool
     lutcolorTonemapped = renodx::color::correct::ChrominanceICtCp(lutcolor, byLuminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(lutcolor)) * shader_injection.tone_map_chrominance_restoration));
   }
 
-  lutcolorTonemapped = luttype ? renodx::color::srgb::EncodeSafe(lutcolorTonemapped) : renodx::color::arri::logc::c800::Encode(lutcolorTonemapped);  // needs to match output from the lut
-
-  return lutcolorTonemapped;  
+  lutcolorTonemapped = luttype ? renodx::color::srgb::EncodeSafe(lutcolorTonemapped) : renodx::color::arri::logc::c800::Decode(lutcolorTonemapped);  // needs to match output from the lut
+  
+  return lutcolorTonemapped;
 }
 
 // Linear in, Linear out
@@ -232,9 +238,9 @@ void GammaColorSpaceCorrection(inout float3 color, in uint inputtype = 0u, in ui
   }
 }
 
-void BT2020fromBT709andPQEncode(inout float3 color, in float paperwhite, in bool fix = true) {
+void BT2020fromBT709andPQEncode(inout float3 color, in float paperwhite) {
   [branch]
-  if (!fix) {
+  if (!RENODX_FIX_COLOR) {
     paperwhite = paperwhite * 9.999999747378752e-05f;
     float colorr = exp2(log2(mad(0.04331360012292862f, color.b, mad(0.3292819857597351f, color.g, (color.r * 0.627403974533081f))) * paperwhite) * 0.1593017578125f);
     float colorg = exp2(log2(mad(0.012477199546992779f, color.b, mad(0.9417769908905029f, color.g, (color.r * 0.045745600014925f))) * paperwhite) * 0.1593017578125f);
@@ -248,9 +254,9 @@ void BT2020fromBT709andPQEncode(inout float3 color, in float paperwhite, in bool
   }
 }
 
-void PQDecodeBT709FromBT2020(inout float3 color, in float paperwhite, in bool fix = true) {
+void PQDecodeBT709FromBT2020(inout float3 color, in float paperwhite) {
   [branch]
-  if (!fix) {
+  if (!RENODX_FIX_COLOR) {
     paperwhite = paperwhite * 9.999999747378752e-05f;
     color.r = (pow(color.r, 0.012683313339948654f));
     color.g = (pow(color.g, 0.012683313339948654f));
@@ -267,6 +273,28 @@ void PQDecodeBT709FromBT2020(inout float3 color, in float paperwhite, in bool fi
   }
 }
 
+// Apply Vanilla Dithering + vanilla / renodx film grain
+float3 ApplyDitheringAndFilmGrain(float3 color, float3 dither_color, float filmGrain_color, float2 xy) {
+
+  float3 final_color;
+  [branch]
+  if (RENODX_FX_FILM_GRAIN_TYPE == 1.f) {
+    color = renodx::color::pq::DecodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
+    color = renodx::effects::ApplyFilmGrain(color, xy, RENODX_FX_RANDOM, RENODX_FX_FILM_GRAIN_STRENGTH * 0.03f, 1.f);
+    color = renodx::color::pq::EncodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
+
+    final_color.r = (dither_color.r * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + color.x;
+    final_color.g = (dither_color.g * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + color.y;
+    final_color.b = (dither_color.b * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + color.z;
+  } else {
+    final_color.r = saturate(((dither_color.r * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + color.x) + filmGrain_color);
+    final_color.g = saturate(((dither_color.g * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + color.y) + filmGrain_color);
+    final_color.b = saturate(((dither_color.b * 0.003921568859368563f * RENODX_FX_DITHERING_STRENGTH) + color.z) + filmGrain_color);
+  }
+
+  return final_color;
+}
+
 // Takes in BT2020 PQ and outputs BT2020 PQ (gamma corrected)
 float3 BlendUI(float4 UIColor, float3 color) {
   [branch]
@@ -280,7 +308,7 @@ float3 BlendUI(float4 UIColor, float3 color) {
     color = renodx::color::srgb::DecodeSafe(color);
 
     GammaColorSpaceCorrection(color, 0u, 0u, RENODX_GRAPHICS_WHITE_NITS);
-    BT2020fromBT709andPQEncode(color, RENODX_GRAPHICS_WHITE_NITS, RENODX_FIX_COLOR);
+    BT2020fromBT709andPQEncode(color, RENODX_GRAPHICS_WHITE_NITS);
   } else {
     GammaColorSpaceCorrection(color, 2u, 1u, RENODX_DIFFUSE_WHITE_NITS);
   }
