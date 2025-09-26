@@ -156,7 +156,7 @@ float4 main(
   // SV_Target.x = _484;
   // SV_Target.y = _485;
   // SV_Target.z = _486;
-  SV_Target.rgb = BlendUI(_328, float3(_325, _326, _327));
+  SV_Target.rgb = BlendUI(_328, ApplyDitheringAndFilmGrain(_246.rgb, float3(_306, _307, _308), _321, TEXCOORD.xy));
 
   SV_Target.w = _250;
   return SV_Target;

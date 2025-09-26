@@ -209,7 +209,7 @@ float4 main(
   // SV_Target.y = _681;
   // SV_Target.z = _682;
 
-  SV_Target.rgb = BlendUI(_524, float3(_521, _522, _523));
+  SV_Target.rgb = BlendUI(_524, ApplyDitheringAndFilmGrain(float3(_446, _447, _448), float3(_502, _503, _504), _517, TEXCOORD.xy));
   SV_Target.w = _315;
   return SV_Target;
 }
