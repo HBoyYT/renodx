@@ -52,7 +52,7 @@ float3 SampleLUT(float3 color, SamplerState sampler, Texture3D texture, bool lut
 
     lut_black = renodx::lut::Sample(0.f, lut_config, texture);
     lut_mid_gray = renodx::lut::Sample(0.18f, lut_config, texture);
-    lut_white = renodx::lut::Sample((1.f) * 2, lut_config, texture);
+    lut_white = renodx::lut::Sample(1.f, lut_config, texture);
     
     float3 output_gamma = lutOutputColor;  // What the lut returns normally
     float3 black_gamma = lut_black;
