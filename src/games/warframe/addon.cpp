@@ -39,6 +39,16 @@
          .labels = {"Simple", "Intermediate", "Advanced"},
          .is_global = true,
      },
+          new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = "Settings require a 'scene change' to apply them. Examples of 'scene changes' include:"
+                 "\n    -Aim gliding (non-protoframe skin)"
+                 "\n    -Turning the game's HDR on and off"
+                 "\n    -Moving the 'brightness', 'contrast' or 'paper white' slider in the game's settings"
+                 "\n    -Fast traveling to places in a hub / base of operations",
+        .section = "How To Apply Settings:",
+        .tint = 0xFFFF00,
+    },
      new renodx::utils::settings::Setting{
         .key = "ToneMapType",
         .binding = &shader_injection.tone_map_type,
@@ -121,7 +131,7 @@
      new renodx::utils::settings::Setting{
          .key = "ToneMapHueCorrection",
          .binding = &shader_injection.tone_map_hue_correction,
-         .default_value = 50.f,
+         .default_value = 0.f,
          .label = "Hue Correction",
          .section = "Tone Mapping",
          .tooltip = "Hue retention strength.",
@@ -387,14 +397,6 @@
                  "\n- Set 'Sharpening' to 100. (This will not control the sharpening ammount, use the slider in RenoDX instead).",
         .section = "Instructions",
     },
-     new renodx::utils::settings::Setting{
-        .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "\nPlease note, settings require a 'scene change' to apply them. Examples of 'scene changes' include:"
-                 "\n    -Aim gliding (non-protoframe skin)"
-                 "\n    -Fast traveling to places in a hub / base of operations",
-        .section = "Instructions",
-        .tint = 0xFFFF00,
-    },
         new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = "\n Credits to Lilium for their RCAS shader.",
@@ -510,9 +512,9 @@ void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
     peak = 1000.f;
   }
   
-  settings[2]->default_value = peak.value();
-  settings[3]->default_value = renodx::utils::swapchain::ComputeReferenceWhite(peak.value());
+  settings[3]->default_value = peak.value();
   settings[4]->default_value = renodx::utils::swapchain::ComputeReferenceWhite(peak.value());
+  settings[5]->default_value = renodx::utils::swapchain::ComputeReferenceWhite(peak.value());
 }
 
 void OnPresent(
