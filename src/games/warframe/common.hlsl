@@ -51,7 +51,7 @@ float3 SampleLUT(float3 color, SamplerState sampler, Texture3D texture, bool lut
     float3 lut_white = 1.f;
 
     lut_black = renodx::lut::Sample(0.f, lut_config, texture);
-    lut_mid_gray = renodx::lut::Sample((0.18f) * 2, lut_config, texture);
+    lut_mid_gray = renodx::lut::Sample(0.18f, lut_config, texture);
     lut_white = renodx::lut::Sample((1.f) * 2, lut_config, texture);
     
     float3 output_gamma = lutOutputColor;  // What the lut returns normally
@@ -70,7 +70,7 @@ float3 SampleLUT(float3 color, SamplerState sampler, Texture3D texture, bool lut
         neutral_tonemapped,
         color,
         1.f);
-    color = lerp(color, graded_color, RENODX_LUT_SCALING);
+    color = lerp(color, graded_color, RENODX_LUT_SCALING); // Lut peak scaling
 
     // linear to gamma
     output_gamma = renodx::color::srgb::EncodeSafe(color);
@@ -90,7 +90,7 @@ float3 SampleLUT(float3 color, SamplerState sampler, Texture3D texture, bool lut
         color,
         renodx::color::srgb::DecodeSafe(unclamped));
 
-    color = lerp(color, recolored, shader_injection.lut_scaling);
+    color = lerp(color, recolored, shader_injection.lut_scaling); // Lut scaling (not peak)
   } else {
     return lutOutputColor;  // Lut without any corrections
   }
@@ -146,7 +146,7 @@ float3 ApplyTonemap(float3 color, bool isLUT, float3 untonemapped, bool per_chan
   tone_map_config.reno_drt_tone_map_method = 1u;  // Reinhard
 
   tone_map_config.hue_correction_strength = 0.f;
-  tone_map_config.reno_drt_working_color_space = 1u;
+  tone_map_config.reno_drt_working_color_space = 0u;
 
   float3 tonemapped_color = renodx::tonemap::config::Apply(color, tone_map_config);
 
@@ -156,8 +156,8 @@ float3 ApplyTonemap(float3 color, bool isLUT, float3 untonemapped, bool per_chan
     float3 color_luminance = renodx::tonemap::config::Apply(color, tone_map_config);
 
     // If by luminance color's chrominance is greater than per channel's chrominance
-    if (length(renodx::color::oklab::from::BT709(color_luminance).yz) > length(renodx::color::oklab::from::BT709(tonemapped_color).yz)) {
-      tonemapped_color = renodx::color::correct::ChrominanceOKLab(tonemapped_color, color_luminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(color)) * shader_injection.tone_map_chrominance_restoration));
+    if (length(renodx::color::ictcp::from::BT709(color_luminance).yz) > length(renodx::color::ictcp::from::BT709(tonemapped_color).yz)) {
+      tonemapped_color = renodx::color::correct::ChrominanceICtCp(tonemapped_color, color_luminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(color)) * shader_injection.tone_map_chrominance_restoration));
     }
   }
 
