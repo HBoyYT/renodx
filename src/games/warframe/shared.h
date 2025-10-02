@@ -25,6 +25,7 @@
 
 #define RENODX_FX_VIGNETTE_STRENGTH          shader_injection.fx_vignette_strength
 #define RENODX_FX_CA_STRENGTH                shader_injection.fx_ca_strength
+#define RENODX_FX_BLOOM_STRENGTH             shader_injection.fx_bloom_strength
 #define RENODX_FX_DITHERING_STRENGTH         shader_injection.fx_dithering_strength
 #define RENODX_FX_SHARPENING_TYPE            shader_injection.fx_sharpening_type
 #define RENODX_FX_SHARPENNING_STRENGTH       shader_injection.fx_sharpening_strength
@@ -61,13 +62,14 @@ struct ShaderInjectData {
   float color_grade_strength;
 
   float lut_scaling;
+  float fx_sharpening_strength;
+  float fx_sharpening_type;
+  float fx_film_grain_strength;
+  float fx_film_grain_type;
   float fx_vignette_strength;
   float fx_ca_strength;
+  float fx_bloom_strength;
   float fx_dithering_strength;
-  float fx_sharpening_type;
-  float fx_sharpening_strength;
-  float fx_film_grain_type;
-  float fx_film_grain_strength;
   float fx_enable_ui;
 
   float swap_chain_custom_color_space;
