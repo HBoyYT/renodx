@@ -21,14 +21,71 @@
  #include "./shared.h"
  
  namespace {
- 
- renodx::mods::shader::CustomShaders custom_shaders = {__ALL_CUSTOM_SHADERS};
+    bool lut_reload_required = false;
+
+    bool OnLutBuilderReplace(reshade::api::command_list* cmd_list) {
+        lut_reload_required = false;
+    return true;
+    }
+
+    void OnLUTSettingChange() {
+        lut_reload_required = true;
+    };
+    
+ renodx::mods::shader::CustomShaders custom_shaders = {
+    // Lutbuilders
+    // When lutbuilder shader being used, run OnLutBuilderReplace()
+    CustomShaderEntryCallback(0x4AC59D16, &OnLutBuilderReplace),   // Normal
+    CustomShaderEntryCallback(0x0BB05207, &OnLutBuilderReplace),   // LUT
+
+    // Output Shaders
+    CustomShaderEntry(0x9BF36ACD),    // 1999Cutscene
+    CustomShaderEntry(0x55B8EC51),    // Captura
+    CustomShaderEntry(0x698B9195),    // Duviri
+    CustomShaderEntry(0x306EBC75),    // DuviriCutscene
+    CustomShaderEntry(0x6E26898F),    // DuviriLoading
+    CustomShaderEntry(0x01B4D18D),    // LoadingScreen
+    CustomShaderEntry(0x736CE61D),    // NewWar1
+    CustomShaderEntry(0xEA957256),    // NewWar2
+    CustomShaderEntry(0xDEEBA246),    // NewWar3
+    CustomShaderEntry(0x75F82D37),    // Normal
+    CustomShaderEntry(0x794C3AB5),    // Sacrifice
+    CustomShaderEntry(0x99071D76),    // Sanctuary
+    CustomShaderEntry(0x39EED69A),    // Taa_1999Cutscene
+    CustomShaderEntry(0xA8951810),    // Taa_Captura
+    CustomShaderEntry(0xE4874813),    // Taa_Duviri
+    CustomShaderEntry(0xB782B4C6),    // Taa_DuviriCutscene
+    CustomShaderEntry(0xCB5EF532),    // Taa_DuviriLoading
+    CustomShaderEntry(0x17576E53),    // Taa_NewWar1
+    CustomShaderEntry(0xCD3485FD),    // Taa_NewWar2
+    CustomShaderEntry(0x893F13F0),    // Taa_NewWar3
+    CustomShaderEntry(0xF0F70CC8),    // Taa_Normal
+    CustomShaderEntry(0x7F0BA729),    // Taa_Sanctuary
+
+    CustomShaderEntry(0x8C43F051),    // Sharpening
+
+    // Videos
+    CustomShaderEntry(0xA8DF14BF),    // Video
+    CustomShaderEntry(0xC556D9B5),    // Video2
+    CustomShaderEntry(0xB66BDA5B),    // Video3
+ };
  
  ShaderInjectData shader_injection;
  
  float current_settings_mode = 0;
  
  renodx::utils::settings::Settings settings = {
+
+    new renodx::utils::settings::Setting{
+            .value_type = renodx::utils::settings::SettingValueType::TEXT,
+            .label = "Aim glide / toggle in-game HDR to apply changes.",
+            .tint = 0xFF0000,
+            .is_visible = []() {
+              return lut_reload_required;
+            },
+            .is_sticky = true,
+        },
+
      new renodx::utils::settings::Setting{
          .key = "SettingsMode",
          .binding = &current_settings_mode,
@@ -39,16 +96,6 @@
          .labels = {"Simple", "Intermediate", "Advanced"},
          .is_global = true,
      },
-          new renodx::utils::settings::Setting{
-        .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "Settings require a 'scene change' to apply them. Examples of 'scene changes' include:"
-                 "\n    -Aim gliding (non-protoframe skin)"
-                 "\n    -Turning the game's HDR on and off"
-                 "\n    -Moving the 'brightness', 'contrast' or 'paper white' slider in the game's settings"
-                 "\n    -Fast traveling to places in a hub / base of operations",
-        .section = "How To Apply Settings:",
-        .tint = 0xFFFF00,
-    },
      new renodx::utils::settings::Setting{
         .key = "ToneMapType",
         .binding = &shader_injection.tone_map_type,
@@ -60,6 +107,7 @@
         .tooltip = "Sets the tone mapper type",
         .labels = {"Vanilla", "RenoDRT"},
         .parse = [](float value) { return value * 3.f; },
+        .on_change = &OnLUTSettingChange,
         .is_visible = []() { return current_settings_mode >= 1; },
     },
      new renodx::utils::settings::Setting{
@@ -71,6 +119,7 @@
          .tooltip = "Sets the value of peak white in nits",
          .min = 48.f,
          .max = 4000.f,
+         .on_change = &OnLUTSettingChange,
      },
      new renodx::utils::settings::Setting{
          .key = "ToneMapGameNits",
@@ -81,6 +130,7 @@
          .tooltip = "Sets the value of 100% white in nits",
          .min = 48.f,
          .max = 500.f,
+         .on_change = &OnLUTSettingChange,
      },
      new renodx::utils::settings::Setting{
          .key = "ToneMapUINits",
@@ -101,6 +151,7 @@
          .section = "Tone Mapping",
          .tooltip = "Emulates a display EOTF.",
          .labels = {"Off", "2.2", "BT.1886"},
+         .on_change = &OnLUTSettingChange,
          .is_visible = []() { return current_settings_mode >= 1; },
      },
          new renodx::utils::settings::Setting{
@@ -113,6 +164,7 @@
         .tooltip = "Luminance scales colors consistently while per-channel saturates and blows out sooner",
         .labels = {"Luminance", "Per Channel"},
         .is_enabled = []() { return shader_injection.tone_map_type >= 3.f; },
+        .on_change = &OnLUTSettingChange,
         .is_visible = []() { return current_settings_mode >= 2; },
     },
         new renodx::utils::settings::Setting{
@@ -126,6 +178,7 @@
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type >= 3; },
         .parse = [](float value) { return value * 0.01f; },
+        .on_change = &OnLUTSettingChange,
         .is_visible = []() { return shader_injection.tone_map_per_channel >= 1 && current_settings_mode >= 2; },
     },
      new renodx::utils::settings::Setting{
@@ -139,6 +192,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
          .parse = [](float value) { return value * 0.01f; },
+         .on_change = &OnLUTSettingChange,
          .is_visible = []() { return current_settings_mode >= 2; },
      },
      new renodx::utils::settings::Setting{
@@ -150,6 +204,7 @@
          .max = 2.f,
          .format = "%.2f",
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
+         .on_change = &OnLUTSettingChange,
          .is_visible = []() { return current_settings_mode >= 1; },
      },
      new renodx::utils::settings::Setting{
@@ -161,6 +216,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
          .parse = [](float value) { return value * 0.02f; },
+         .on_change = &OnLUTSettingChange,
          .is_visible = []() { return current_settings_mode >= 1; },
      },
      new renodx::utils::settings::Setting{
@@ -172,6 +228,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
          .parse = [](float value) { return value * 0.02f; },
+         .on_change = &OnLUTSettingChange,
          .is_visible = []() { return current_settings_mode >= 1; },
      },
      new renodx::utils::settings::Setting{
@@ -183,6 +240,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
          .parse = [](float value) { return value * 0.02f; },
+         .on_change = &OnLUTSettingChange,
      },
      new renodx::utils::settings::Setting{
          .key = "ColorGradeSaturation",
@@ -193,6 +251,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
          .parse = [](float value) { return value * 0.02f; },
+         .on_change = &OnLUTSettingChange,
      },
      new renodx::utils::settings::Setting{
          .key = "ColorGradeHighlightSaturation",
@@ -204,6 +263,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
          .parse = [](float value) { return value * 0.02f; },
+         .on_change = &OnLUTSettingChange,
          .is_visible = []() { return current_settings_mode >= 1; },
      },
      new renodx::utils::settings::Setting{
@@ -216,6 +276,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
          .parse = [](float value) { return value * 0.01f; },
+         .on_change = &OnLUTSettingChange,
      },
      new renodx::utils::settings::Setting{
          .key = "ColorGradeFlare",
@@ -227,6 +288,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
          .parse = [](float value) { return value * 0.02f; },
+         .on_change = &OnLUTSettingChange,
      },
      new renodx::utils::settings::Setting{
          .key = "ColorGradeScene",
@@ -238,6 +300,7 @@
          .max = 100.f,
          .is_enabled = []() { return shader_injection.tone_map_type > 0; },
          .parse = [](float value) { return value * 0.01f; },
+         .on_change = &OnLUTSettingChange,
      },
     new renodx::utils::settings::Setting{
         .key = "LUTScaling",
@@ -249,20 +312,10 @@
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type > 0; },
         .parse = [](float value) { return value * 0.01f; },
+        .on_change = &OnLUTSettingChange,
         .is_visible = []() { return current_settings_mode >= 1; },
     },
-     new renodx::utils::settings::Setting{
-        .key = "FxVignetteStrength",
-        .binding = &shader_injection.fx_vignette_strength,
-        .default_value = 50.f,
-        .label = "Vignette Strength",
-        .section = "Effects",
-        .tooltip = "Controls the ammount of vignette",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.02f; },
-        .is_visible = []() { return current_settings_mode >= 1; },
-    },
-     new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "FxSharpeningStrength",
         .binding = &shader_injection.fx_sharpening_strength,
         .default_value = 50.f,
@@ -273,77 +326,95 @@
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
-       new renodx::utils::settings::Setting{
-        .key = "FxCAStrength",
-        .binding = &shader_injection.fx_ca_strength,
-        .default_value = 50.f,
-        .label = "Chromatic Aberation Strength",
-        .section = "Effects",
-        .tooltip = "Controls the strength of chromatic aberation",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.02f; },
-        .is_visible = []() { return current_settings_mode >= 1; },
-    },
-       new renodx::utils::settings::Setting{
-        .key = "FxFilmGrainStrength",
-        .binding = &shader_injection.fx_film_grain_strength,
-        .default_value = 50.f,
-        .label = "Film Grain Strength",
-        .section = "Effects",
-        .tooltip = "Controls the strength of the film grain"
-                    "\nDefault: 50",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.02f; },
-        .is_visible = []() { return current_settings_mode >= 2 && shader_injection.fx_film_grain_type == 1; },
-    },
-       new renodx::utils::settings::Setting{
-        .key = "FxDitheringStrength",
-        .binding = &shader_injection.fx_dithering_strength,
-        .default_value = 100.f,
-        .label = "Dithering Strength",
-        .section = "Effects",
-        .tooltip = "Controls how much dithering to apply to the image"
-                    "\nReccomended to leave at defualt value."
-                    "\nDefault: 100",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 2; },
-    },
-         new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "fxSharpeningType",
         .binding = &shader_injection.fx_sharpening_type,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
         .default_value = 1.f,
         .label = "Sharpening Type",
         .section = "Effects",
-        .tooltip = "Selects sharpening filter."
-                   "\nDefault: Vanilla",
+        .tooltip = "Selects sharpening filter.\nDefault: Vanilla",
         .labels = {"Vanilla", "RCAS"},
         .is_visible = []() { return current_settings_mode >= 2; },
     },
-         new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
+        .key = "FxFilmGrainStrength",
+        .binding = &shader_injection.fx_film_grain_strength,
+        .default_value = 50.f,
+        .label = "Film Grain Strength",
+        .section = "Effects",
+        .tooltip = "Controls the strength of the film grain\nDefault: 50",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 2 && shader_injection.fx_film_grain_type == 1; },
+    },
+    new renodx::utils::settings::Setting{
         .key = "fxFilmGrainType",
         .binding = &shader_injection.fx_film_grain_type,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
+        .default_value = 0.f,
         .label = "Film Grain Type",
         .section = "Effects",
-        .tooltip = "Selects film grain type."
-                   "\nDefault: Vanilla",
+        .tooltip = "Selects film grain type.\nDefault: Vanilla",
         .labels = {"Vanilla", "RenoDX"},
         .is_visible = []() { return current_settings_mode >= 2; },
     },
+    new renodx::utils::settings::Setting{
+        .key = "FxVignetteStrength",
+        .binding = &shader_injection.fx_vignette_strength,
+        .default_value = 50.f,
+        .label = "Vignette Strength",
+        .section = "Effects",
+        .tooltip = "Controls the amount of vignette",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return current_settings_mode >= 1; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "FxCAStrength",
+        .binding = &shader_injection.fx_ca_strength,
+        .default_value = 50.f,
+        .label = "Chromatic Aberation Strength",
+        .section = "Effects",
+        .tooltip = "Controls the strength of chromatic aberration",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return current_settings_mode >= 1; },
+    },
         new renodx::utils::settings::Setting{
+        .key = "FxBloomStrength",
+        .binding = &shader_injection.fx_bloom_strength,
+        .default_value = 50.f,
+        .label = "Bloom Strength",
+        .section = "Effects",
+        .tooltip = "Controls the strength of bloom"
+                   "\nTakes over game slider.",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.001f; },
+        .is_visible = []() { return current_settings_mode >= 1; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "FxDitheringStrength",
+        .binding = &shader_injection.fx_dithering_strength,
+        .default_value = 100.f,
+        .label = "Dithering Strength",
+        .section = "Effects",
+        .tooltip = "Controls how much dithering to apply to the image\nRecommended to leave at default value.\nDefault: 100",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
+    new renodx::utils::settings::Setting{
         .key = "fxEnableUI",
         .binding = &shader_injection.fx_enable_ui,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
         .default_value = 1.f,
         .label = "Enable UI",
         .section = "Effects",
-        .tooltip = "Usefull for taking screenshots.",
+        .tooltip = "Useful for taking screenshots.",
         .labels = {"Off", "On"},
         .is_visible = []() { return current_settings_mode >= 1; },
-    },
+},
      new renodx::utils::settings::Setting{
         .key = "SwapChainCustomColorSpace",
         .binding = &shader_injection.swap_chain_custom_color_space,
@@ -433,7 +504,8 @@
             if (setting->key.empty()) continue;
             if (!setting->can_reset) continue;
             renodx::utils::settings::UpdateSetting(setting->key, setting->default_value);
-          }
+            if (setting->on_change) setting->on_change();
+        }
         },
     },
     new renodx::utils::settings::Setting{
@@ -493,12 +565,14 @@
    renodx::utils::settings::UpdateSetting("LUTScaling", 0.f);
    renodx::utils::settings::UpdateSetting("FxVignetteStrength", 50.f);
    renodx::utils::settings::UpdateSetting("fxSharpeningType", 0.f);
+   renodx::utils::settings::UpdateSetting("fxFilmGrainType", 0.f);
    renodx::utils::settings::UpdateSetting("FxCAStrength", 50.f);
    renodx::utils::settings::UpdateSetting("FxDitheringStrength", 100.f);
    renodx::utils::settings::UpdateSetting("FxFilmGrainStrength", 50.f);
    renodx::utils::settings::UpdateSetting("SwapChainCustomColorSpace", 0.f);
    renodx::utils::settings::UpdateSetting("ColorFix", 0.f);
    renodx::utils::settings::UpdateSetting("TransitionFix", 0.f);
+   OnLUTSettingChange();
  }
  
 bool fired_on_init_swapchain = false;
