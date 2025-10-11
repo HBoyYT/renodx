@@ -1,57 +1,12 @@
 #ifndef SRC_TEMPLATE_SHARED_H_
 #define SRC_TEMPLATE_SHARED_H_
 
-// Must be 32bit aligned
-// Should be 4x32
-struct ShaderInjectData {
-  float tone_map_type;
-  float peak_white_nits;
-  float diffuse_white_nits;
-  float graphics_white_nits;
-  float gamma_correction;
-  float tone_map_per_channel;
-  float tone_map_chrominance_restoration;
-  float tone_map_hue_correction;
-
-  float tone_map_exposure;
-  float tone_map_highlights;
-  float tone_map_shadows;
-  float tone_map_contrast;
-  float tone_map_saturation;
-  float tone_map_highlight_saturation;
-  float tone_map_blowout;
-  float tone_map_flare;
-  float color_grade_strength;
-
-  float lut_scaling;
-  float fx_vignette_strength;
-  float fx_ca_strength;
-  float fx_dithering_strength;
-  float fx_enable_ui;
-
-  float swap_chain_custom_color_space;
-
-  float fix_color;
-  float fix_crossfade;
-};
-
-#ifndef __cplusplus
-#if ((__SHADER_TARGET_MAJOR == 5 && __SHADER_TARGET_MINOR >= 1) || __SHADER_TARGET_MAJOR >= 6)
-cbuffer shader_injection : register(b13, space50) {
-#elif (__SHADER_TARGET_MAJOR < 5) || ((__SHADER_TARGET_MAJOR == 5) && (__SHADER_TARGET_MINOR < 1))
-cbuffer shader_injection : register(b13) {
-#endif
-  ShaderInjectData shader_injection : packoffset(c0);
-}
 
 #define RENODX_TONE_MAP_TYPE                 shader_injection.tone_map_type
 #define RENODX_PEAK_WHITE_NITS               shader_injection.peak_white_nits
 #define RENODX_DIFFUSE_WHITE_NITS            shader_injection.diffuse_white_nits
 #define RENODX_GRAPHICS_WHITE_NITS           shader_injection.graphics_white_nits
 #define RENODX_GAMMA_CORRECTION              shader_injection.gamma_correction
-#define RENODX_TONE_MAP_PER_CHANNEL          shader_injection.tone_map_per_channel
-#define RENODX_TONE_MAP_CHROMINANCE_RESTORATION shader_injection.tone_map_chrominance_restoration
-#define RENODX_TONE_MAP_HUE_CORRECTION       shader_injection.tone_map_hue_correction
 
 #define RENODX_TONE_MAP_EXPOSURE             shader_injection.tone_map_exposure
 #define RENODX_TONE_MAP_HIGHLIGHTS           shader_injection.tone_map_highlights
@@ -65,15 +20,65 @@ cbuffer shader_injection : register(b13) {
 #define RENODX_COLOR_GRADE_LUT_STRENGTH      shader_injection.color_grade_lut_strength
 #define RENODX_LUT_SCALING				           shader_injection.lut_scaling
 
+#define RENODX_FX_AUTOEXPOSURE_STRENGTH      shader_injection.fx_autoexposre_strength
 #define RENODX_FX_VIGNETTE_STRENGTH          shader_injection.fx_vignette_strength
 #define RENODX_FX_CA_STRENGTH                shader_injection.fx_ca_strength
+#define RENODX_FX_BLOOM_STRENGTH             shader_injection.fx_bloom_strength
 #define RENODX_FX_DITHERING_STRENGTH         shader_injection.fx_dithering_strength
+#define RENODX_FX_SHARPENING_TYPE            shader_injection.fx_sharpening_type
+#define RENODX_FX_SHARPENNING_STRENGTH       shader_injection.fx_sharpening_strength
+#define RENODX_FX_FILM_GRAIN_STRENGTH        shader_injection.fx_film_grain_strength
 #define RENODX_FX_ENABLE_UI                  shader_injection.fx_enable_ui
 
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE shader_injection.swap_chain_custom_color_space
 
 #define RENODX_FIX_CROSSFADE                 shader_injection.fix_crossfade
 #define RENODX_FIX_COLOR                     shader_injection.fix_color
+#define RENODX_FIX_ALLOW_BT2020              shader_injection.fix_allow_bt2020
+#define RENODX_FX_RANDOM                     shader_injection.fx_random
+
+// Must be 32bit aligned
+// Should be 4x32
+struct ShaderInjectData {
+  float tone_map_type;
+  float peak_white_nits;
+  float diffuse_white_nits;
+  float graphics_white_nits;
+  float gamma_correction;
+
+  float tone_map_exposure;
+  float tone_map_highlights;
+  float tone_map_shadows;
+  float tone_map_contrast;
+  float tone_map_saturation;
+  float tone_map_highlight_saturation;
+  float tone_map_blowout;
+  float tone_map_flare;
+  float color_grade_strength;
+
+  float lut_scaling;
+  float fx_sharpening_strength;
+  float fx_sharpening_type;
+  float fx_film_grain_strength;
+  float fx_vignette_strength;
+  float fx_ca_strength;
+  float fx_bloom_strength;
+  float fx_dithering_strength;
+  float fx_autoexposre_strength;
+  float fx_enable_ui;
+
+  float swap_chain_custom_color_space;
+
+  float fix_color;
+  float fix_allow_bt2020;
+  float fix_crossfade;
+  float fx_random;
+};
+
+#ifndef __cplusplus
+cbuffer shader_injection : register(b13, space50) {
+  ShaderInjectData shader_injection : packoffset(c0);
+}
 
 #include "../../shaders/renodx.hlsl"
 

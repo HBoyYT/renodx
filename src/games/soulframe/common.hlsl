@@ -20,9 +20,15 @@ float3 WarframeHDRTonemapper(float3 untonemapped, bool SDR = false) {
     h *= 1.3;
   }
 
-  float3 num = ((((((((untonemapped * a) + b) * untonemapped) + c) * untonemapped) + d) * untonemapped) + e);
-  float3 den = ((((((((untonemapped * f) + g) * untonemapped) + h) * untonemapped) + i) * untonemapped) + j);
-  float3 color = renodx::color::srgb::DecodeSafe(num / den);
+  float3 num;
+  float3 den;
+  float3 color;
+
+  float3 abs_untonemapped = abs(untonemapped);
+
+  num = ((((((((abs_untonemapped * a) + b) * abs_untonemapped) + c) * abs_untonemapped) + d) * abs_untonemapped) + e);
+  den = ((((((((abs_untonemapped * f) + g) * abs_untonemapped) + h) * abs_untonemapped) + i) * abs_untonemapped) + j);
+  color = sign(untonemapped) * renodx::color::srgb::DecodeSafe((num / den));
 
   return color;
 }
@@ -42,35 +48,35 @@ float3 SampleLUT(float3 color, SamplerState sampler, Texture3D texture, bool lut
   float3 linear_input_color = color;
 
   color = renodx::lut::Sample(color, lut_config, texture);  // The lut takes 2 * arri c800 encode as input
-                                                           // When I am using lut::sample, I use 2 * linear as input
+                                                                // When I am using lut::sample, I use 2 * linear as input
   float3 lutOutputColor = color;
 
-  if (shader_injection.lut_scaling != 0.f) {
-    float3 lut_black = 0.f;
-    float3 lut_mid_gray = 0.18f;
-    float3 lut_white = 1.f;
 
-    lut_black = renodx::lut::Sample(0.f, lut_config, texture);
-    lut_mid_gray = renodx::lut::Sample((0.18f), lut_config, texture);
-    lut_white = renodx::lut::Sample((1.f), lut_config, texture);
-    
-    float3 output_gamma = lutOutputColor;  // What the lut returns normally
-    float3 black_gamma = lut_black;
-    float3 midgray_gamma = lut_mid_gray;
-    float3 peak_gamma = lut_white;
-    float3 input_gamma = linear_input_color;
+  float3 lut_black = 0.f;
+  float3 lut_mid_gray = 0.18f;
+  float3 lut_white = 1.f;
 
-    float mid_gray = renodx::color::y::from::BT709(lut_mid_gray);
-    float peak = renodx::color::y::from::BT709(lut_white);
+  lut_black = renodx::lut::Sample(0.f, lut_config, texture);
+  lut_mid_gray = renodx::lut::Sample(0.18f, lut_config, texture);
+  lut_white = renodx::lut::Sample(1.f, lut_config, texture);
+  
+  float3 output_gamma = lutOutputColor;  // What the lut returns normally
+  float3 black_gamma = lut_black;
+  float3 midgray_gamma = lut_mid_gray;
+  float3 peak_gamma = lut_white;
+  float3 input_gamma = linear_input_color;
 
-    // Correct peak (upgradetonemap)
-    float3 neutral_tonemapped = renodx::tonemap::ReinhardScalable(linear_input_color, peak, 0, 0.18f, mid_gray);
-    float3 graded_color = renodx::tonemap::UpgradeToneMap(
-        linear_input_color * mid_gray / 0.18f,
-        neutral_tonemapped,
-        color,
-        1.f);
-    color = lerp(color, graded_color, RENODX_LUT_SCALING);
+  float mid_gray = renodx::color::y::from::BT709(lut_mid_gray);
+  float peak = renodx::color::y::from::BT709(lut_white);
+
+  // Correct peak (upgradetonemap)
+  float3 neutral_tonemapped = renodx::tonemap::ReinhardScalable(linear_input_color, peak, 0, 0.18f, mid_gray);
+  float3 graded_color = renodx::tonemap::UpgradeToneMap(
+      linear_input_color * mid_gray / 0.18f,
+      neutral_tonemapped,
+      color,
+      1.f);
+  color = lerp(color, graded_color, 1.f); // Lut peak scaling
 
     // linear to gamma
     output_gamma = renodx::color::srgb::EncodeSafe(color);
@@ -90,17 +96,15 @@ float3 SampleLUT(float3 color, SamplerState sampler, Texture3D texture, bool lut
         color,
         renodx::color::srgb::DecodeSafe(unclamped));
 
-    color = lerp(color, recolored, shader_injection.lut_scaling);
-  } else {
-    return lutOutputColor;  // Lut without any corrections
-  }
+    color = lerp(color, recolored, shader_injection.lut_scaling); // Lut scaling (not peak)
+
   return color;
 }
 
 void CrossFadeFix(inout float color_r, inout float color_g, inout float color_b, in float cb0_009x, in float cb0_009z) {
   float3 color = float3(color_r, color_g, color_b); 
   color = lerp(saturate(renodx::color::bt2020::from::BT709(color)) / 2, color, cb0_009x);
-  color = lerp(saturate(renodx::color::bt2020::from::BT709(color)) / 2, color, cb0_009z + 1.f);
+  color = lerp(saturate(renodx::color::bt2020::from::BT709(color + 0.1f)) / 2, color, cb0_009z + 1.f);
 
   color_r = color.r;
   color_g = color.g;
@@ -111,22 +115,29 @@ float3 GetUntonemappedGraded(float3 untonemapped, float3 tonemapped_graded) {
   float3 untonemapped_graded;
 
   if (RENODX_TONE_MAP_TYPE == 3.f) {  // Modified Warframe tonemapper
-    float blend = smoothstep(1, 1.2, renodx::color::y::from::BT709(tonemapped_graded));
-    untonemapped_graded = lerp(tonemapped_graded, untonemapped * 1.83899937044f, blend);
+    untonemapped_graded = WarframeHDRTonemapper(untonemapped);
+    // unclamped = select(untonemapped >= 0.46245355071866007f, 2.004091850890038f * untonemapped, color);  // Unclamp
+
+      float3 unclamped;
+      float3 rolloffWeight = saturate((abs(untonemapped) - 0.46245355071866007f) * 10.0f);  // tweak factor for softness
+      unclamped = untonemapped_graded + rolloffWeight * (2.004091850890038f * untonemapped - untonemapped_graded);
+      untonemapped_graded = unclamped;
   }
+
 
   untonemapped_graded = lerp(untonemapped, untonemapped_graded, RENODX_COLOR_GRADE_STRENGTH);
 
   return untonemapped_graded;
 }
 
-float3 ApplyTonemap(float3 color, bool isLUT, float3 untonemapped, bool per_channel = shader_injection.tone_map_per_channel) {
-  
+void ApplyTonemap(inout float color_r, inout float color_g, inout float color_b) {
+  float3 color = float3(color_r, color_g, color_b);
+
   renodx::tonemap::Config tone_map_config = renodx::tonemap::config::Create();
   tone_map_config.peak_nits = shader_injection.peak_white_nits;
   tone_map_config.game_nits = shader_injection.diffuse_white_nits;
   tone_map_config.type = shader_injection.tone_map_type == 3.f || shader_injection.tone_map_type == 6.f ? 3.f : 0.f;
-  tone_map_config.reno_drt_per_channel = isLUT ? 0.f : per_channel;
+  tone_map_config.reno_drt_per_channel = false;
   tone_map_config.gamma_correction = shader_injection.gamma_correction;
   tone_map_config.exposure = shader_injection.tone_map_exposure;
   tone_map_config.highlights = shader_injection.tone_map_highlights;
@@ -141,31 +152,23 @@ float3 ApplyTonemap(float3 color, bool isLUT, float3 untonemapped, bool per_chan
   tone_map_config.reno_drt_blowout = -1.f * (shader_injection.tone_map_highlight_saturation - 1.f);
   tone_map_config.reno_drt_dechroma = shader_injection.tone_map_blowout;
   tone_map_config.reno_drt_flare = 0.10f * pow(shader_injection.tone_map_flare, 10.f);
-  tone_map_config.reno_drt_tone_map_method = 1u;  // Reinhard
+  tone_map_config.reno_drt_tone_map_method = renodx::tonemap::renodrt::config::tone_map_method::REINHARD;  // Reinhard
 
   tone_map_config.hue_correction_strength = 0.f;
-  tone_map_config.reno_drt_working_color_space = 1u;
+  tone_map_config.reno_drt_working_color_space = 0u;
+  tone_map_config.reno_drt_clamp_color_space = 1u;
+  tone_map_config.reno_drt_clamp_peak = 1u;
 
   float3 tonemapped_color = renodx::tonemap::config::Apply(color, tone_map_config);
-
-  // Chrominance correction (when tone mapping per channel)
-  if (tone_map_config.reno_drt_per_channel == true && shader_injection.tone_map_chrominance_restoration > 0.f) {
-    tone_map_config.reno_drt_per_channel = false;
-    float3 color_luminance = renodx::tonemap::config::Apply(color, tone_map_config);
-    tonemapped_color = renodx::color::correct::ChrominanceICtCp(tonemapped_color, color_luminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(color)) * shader_injection.tone_map_chrominance_restoration));
-  }
-
-  // Do not want to hue correct SDR luts
-  tonemapped_color = !isLUT ? renodx::color::correct::HueICtCp(tonemapped_color, WarframeHDRTonemapper(untonemapped, true), RENODX_TONE_MAP_HUE_CORRECTION) : tonemapped_color;
-
-  return tonemapped_color;
+  color_r = tonemapped_color.r;
+  color_g = tonemapped_color.g;
+  color_b = tonemapped_color.b;
 }
 
+
 void TonemapperFix(inout float tonemapped_graded_r, inout float tonemapped_graded_g, inout float tonemapped_graded_b, float3 untonemapped) {
-  
   float3 tonemapped_graded = float3(tonemapped_graded_r, tonemapped_graded_g, tonemapped_graded_b);
   float3 untonemapped_graded = GetUntonemappedGraded(untonemapped, tonemapped_graded);
-  tonemapped_graded = ApplyTonemap(untonemapped_graded, false, untonemapped);
 
   tonemapped_graded_r = tonemapped_graded.r;
   tonemapped_graded_g = tonemapped_graded.g;
@@ -175,16 +178,16 @@ void TonemapperFix(inout float tonemapped_graded_r, inout float tonemapped_grade
 float3 LUTFix(float3 untonemapped, SamplerState sampler, Texture3D texture, bool luttype) {
   float3 lutcolor = SampleLUT(untonemapped, sampler, texture, luttype);  // Linear in, linear out
   lutcolor = lerp(untonemapped, lutcolor, RENODX_COLOR_GRADE_STRENGTH);
-  float3 lutcolorTonemapped = ApplyTonemap(lutcolor, luttype, untonemapped);
+  // float3 lutcolorTonemapped = ApplyTonemap(lutcolor, luttype, untonemapped);
 
-  if (shader_injection.tone_map_per_channel == 1.f && shader_injection.tone_map_chrominance_restoration > 0.f && luttype == false) {
-    float3 byLuminance = ApplyTonemap(lutcolor, false, untonemapped, false);
-    lutcolorTonemapped = renodx::color::correct::ChrominanceICtCp(lutcolor, byLuminance, saturate(renodx::color::y::from::BT2020(renodx::tonemap::renodrt::NeutralSDR(lutcolor)) * shader_injection.tone_map_chrominance_restoration));
-  }
+  // if (shader_injection.tone_map_per_channel == 1.f && shader_injection.tone_map_chrominance_restoration > 0.f && luttype == false) {
+  //   float3 byLuminance = ApplyTonemap(lutcolor, false, untonemapped, false);
+  //   lutcolorTonemapped = renodx::color::correct::ChrominanceICtCp(lutcolor, byLuminance, saturate(renodx::color::y::from::BT709(renodx::tonemap::renodrt::NeutralSDR(lutcolor)) * shader_injection.tone_map_chrominance_restoration));
+  // }
 
-  lutcolorTonemapped = luttype ? renodx::color::srgb::EncodeSafe(lutcolorTonemapped) : renodx::color::arri::logc::c800::Encode(lutcolorTonemapped);  // needs to match output from the lut
+  lutcolor = luttype ? renodx::color::srgb::EncodeSafe(lutcolor) : renodx::color::arri::logc::c800::Encode(lutcolor);  // needs to match output from the lut
 
-  return lutcolorTonemapped;  
+  return lutcolor;
 }
 
 // Linear in, Linear out
@@ -232,9 +235,9 @@ void GammaColorSpaceCorrection(inout float3 color, in uint inputtype = 0u, in ui
   }
 }
 
-void BT2020fromBT709andPQEncode(inout float3 color, in float paperwhite, in bool fix = true) {
+void BT2020fromBT709andPQEncode(inout float3 color, in float paperwhite) {
   [branch]
-  if (!fix) {
+  if (!RENODX_FIX_COLOR) {
     paperwhite = paperwhite * 9.999999747378752e-05f;
     float colorr = exp2(log2(mad(0.04331360012292862f, color.b, mad(0.3292819857597351f, color.g, (color.r * 0.627403974533081f))) * paperwhite) * 0.1593017578125f);
     float colorg = exp2(log2(mad(0.012477199546992779f, color.b, mad(0.9417769908905029f, color.g, (color.r * 0.045745600014925f))) * paperwhite) * 0.1593017578125f);
@@ -248,9 +251,9 @@ void BT2020fromBT709andPQEncode(inout float3 color, in float paperwhite, in bool
   }
 }
 
-void PQDecodeBT709FromBT2020(inout float3 color, in float paperwhite, in bool fix = true) {
+void PQDecodeBT709FromBT2020(inout float3 color, in float paperwhite) {
   [branch]
-  if (!fix) {
+  if (!RENODX_FIX_COLOR) {
     paperwhite = paperwhite * 9.999999747378752e-05f;
     color.r = (pow(color.r, 0.012683313339948654f));
     color.g = (pow(color.g, 0.012683313339948654f));
@@ -267,6 +270,26 @@ void PQDecodeBT709FromBT2020(inout float3 color, in float paperwhite, in bool fi
   }
 }
 
+// Apply Vanilla Dithering + vanilla / renodx film grain
+float3 ApplyDitheringAndFilmGrain(float3 color, float2 xy) {
+
+  float3 final_color;
+  color = renodx::color::pq::DecodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
+  color = renodx::effects::ApplyFilmGrain(color, xy, RENODX_FX_RANDOM, RENODX_FX_FILM_GRAIN_STRENGTH * 0.03f, 1.f);
+  color = renodx::color::pq::EncodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
+
+  // dithering from renodx::draw::swapchainpass
+  float maxValue = exp2(10.0) - 1.0;
+  float dither_strength = exp2(12.0) - 1.0;
+  // ie: 12bit amplitude for 10bit quantization
+  float random_number = renodx::random::Generate(xy + RENODX_FX_RANDOM);
+  float3 noise = (random_number - 0.5) * (1.f / maxValue);
+  float3 dithered = color.rgb * maxValue + noise * dither_strength * RENODX_FX_DITHERING_STRENGTH;
+  final_color = round(max(0, dithered)) / maxValue;
+
+  return final_color;
+}
+
 // Takes in BT2020 PQ and outputs BT2020 PQ (gamma corrected)
 float3 BlendUI(float4 UIColor, float3 color) {
   [branch]
@@ -280,7 +303,7 @@ float3 BlendUI(float4 UIColor, float3 color) {
     color = renodx::color::srgb::DecodeSafe(color);
 
     GammaColorSpaceCorrection(color, 0u, 0u, RENODX_GRAPHICS_WHITE_NITS);
-    BT2020fromBT709andPQEncode(color, RENODX_GRAPHICS_WHITE_NITS, RENODX_FIX_COLOR);
+    BT2020fromBT709andPQEncode(color, RENODX_GRAPHICS_WHITE_NITS);
   } else {
     GammaColorSpaceCorrection(color, 2u, 1u, RENODX_DIFFUSE_WHITE_NITS);
   }
